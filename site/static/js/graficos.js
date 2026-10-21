@@ -147,7 +147,7 @@
     Object.keys(g.series).forEach(function (id) {
       var base = g.series[id][i0];
       series[id] = g.series[id].slice(i0).map(function (v) {
-        return v === null || !base ? null : Math.round((v / base) * 10000) / 100;
+        return v === null || !base ? null : (v / base) * 100;
       });
     });
     return { fechas: g.fechas.slice(i0), series: series };
