@@ -1,6 +1,6 @@
 # Guía: dashboard en Power BI con el modelo estrella
 
-Power BI Desktop es una app de Windows, así que este dashboard se arma a mano. El pipeline ya deja los datos listos y modelados: la idea es mostrar que sabés importar un modelo estrella, relacionarlo y escribir medidas DAX. Lleva unos 30 a 45 minutos.
+Power BI Desktop es una app de Windows, así que el pipeline no genera el `.pbix`: deja el modelo estrella en CSV, listo para importar. Esta guía muestra cómo importarlo, relacionar las tablas, escribir las medidas DAX y armar las páginas, y cómo verificar que los números coincidan con el sitio.
 
 ## 1. Conseguir los CSV
 
@@ -12,8 +12,8 @@ Cualquiera de estas dos opciones:
 | Archivo | Qué es | Clave |
 |---|---|---|
 | `dim_fecha.csv` | Un mes por fila: año, mes, trimestre, etiqueta (`sep-2026`) | `fecha` |
-| `dim_serie.csv` | Qué mide cada serie, su grupo, región, unidad y fuente | `serie_id` |
-| `fact_valor.csv` | El valor de cada serie en cada mes (formato largo) y su `estado` de QA | `fecha` + `serie_id` |
+| `dim_serie.csv` | Qué mide cada serie, su grupo, región, unidad, fuente y rezago de publicación (`desfase_meses`) | `serie_id` |
+| `fact_valor.csv` | El valor de cada serie en cada mes (formato largo), fechado en el mes que mide, y su `estado` de QA | `fecha` + `serie_id` |
 | `salario_real.csv` | Salario real por sector ya calculado (dic-2016 = 100) | `fecha` + `serie_id` |
 
 Los CSV usan coma como separador, **punto como decimal** y UTF-8.
@@ -124,4 +124,4 @@ Si no coinciden, lo más común es el separador decimal (paso 2.3) o que falte m
 
 ## 7. Publicarlo
 
-**Archivo → Exportar → PDF** genera un PDF de las páginas para adjuntar al CV. Para compartirlo en línea hace falta una cuenta de Power BI Service (**Publicar**); con la cuenta gratuita se puede publicar en "Mi área de trabajo" y sacar capturas para el README o LinkedIn.
+**Archivo → Exportar → PDF** genera un PDF de las páginas. Para compartirlo en línea hace falta una cuenta de Power BI Service (**Publicar**); con la cuenta gratuita se puede publicar en "Mi área de trabajo".

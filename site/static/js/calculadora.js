@@ -8,6 +8,9 @@ export const SECTORES = {
   sal_no_registrado: "Privado no registrado",
 };
 
+const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+const mes = (aaaamm) => MESES[Number(aaaamm.slice(5, 7)) - 1] + "-" + aaaamm.slice(0, 4);
+
 export class ErrorCalculadora extends Error {
   constructor(codigo, mensaje) {
     super(mensaje);
@@ -59,6 +62,7 @@ export function calcular(indices, { sueldo, desde, hasta = null, sector = null, 
     inflacion_pct: redondear(100 * inflacion, 2),
     sueldo_equivalente: redondear(equivalente, 2),
     sector: null,
+    aviso_sector: null,
     actual: null,
   };
 
@@ -67,22 +71,30 @@ export function calcular(indices, { sueldo, desde, hasta = null, sector = null, 
       throw new ErrorCalculadora("sector_desconocido", `Sector desconocido: ${sector}.`);
     }
     const serie = indices.salarios[sector];
-    if (!(desde in serie)) {
-      throw new ErrorCalculadora("mes_fuera_de_rango", `No hay índice de salarios para ${desde}.`);
-    }
+    const nombre = SECTORES[sector];
     const ultimoSector = Object.keys(serie).sort().pop();
     const hastaSector = hasta < ultimoSector ? hasta : ultimoSector;
-    const aumento = variacion(serie, desde, hastaSector);
-    const inflacionSector = variacion(indices.ipc, desde, hastaSector);
-    resultado.sector = {
-      sector,
-      nombre: SECTORES[sector],
-      hasta: hastaSector,
-      aumento_pct: redondear(100 * aumento, 2),
-      inflacion_pct: redondear(100 * inflacionSector, 2),
-      sueldo_segun_sector: redondear(sueldo * (1 + aumento), 2),
-      resultado_real_pct: redondear(100 * ((1 + aumento) / (1 + inflacionSector) - 1), 2),
-    };
+    if (desde >= ultimoSector) {
+      resultado.aviso_sector =
+        `El índice de salarios «${nombre}» llega hasta ${mes(ultimoSector)}: ` +
+        "para comparar con el sector, elegí un mes inicial anterior.";
+    } else if (!(desde in serie)) {
+      resultado.aviso_sector = `El índice de salarios «${nombre}» no tiene dato para ${mes(desde)}.`;
+    } else if (desde === hastaSector) {
+      resultado.aviso_sector = "Para comparar con el sector, elegí un mes final posterior al inicial.";
+    } else {
+      const aumento = variacion(serie, desde, hastaSector);
+      const inflacionSector = variacion(indices.ipc, desde, hastaSector);
+      resultado.sector = {
+        sector,
+        nombre,
+        hasta: hastaSector,
+        aumento_pct: redondear(100 * aumento, 2),
+        inflacion_pct: redondear(100 * inflacionSector, 2),
+        sueldo_segun_sector: redondear(sueldo * (1 + aumento), 2),
+        resultado_real_pct: redondear(100 * ((1 + aumento) / (1 + inflacionSector) - 1), 2),
+      };
+    }
   }
 
   if (sueldoActual !== null) {

@@ -1,5 +1,5 @@
 {
-  "_comentario": "Casos compartidos por tests/test_calculadora.py (pytest) y tests/js/calculadora.test.mjs (node). Los valores esperados se calcularon aparte, directo de los CSV oficiales de data/raw, con redondeo half-up a 2 decimales.",
+  "_comentario": "Casos compartidos por tests/test_calculadora.py (pytest) y tests/js/calculadora.test.mjs (node). Los valores esperados se calcularon aparte, directo de los CSV oficiales de data/raw (con el índice del sector no registrado corrido 5 meses, como el modelo), con redondeo half-up a 2 decimales.",
   "tolerancia": 0.005,
   "casos": [
     {
@@ -14,6 +14,7 @@
         "inflacion_pct": 12414.15,
         "sueldo_equivalente": 12514150.8,
         "sector": null,
+        "aviso_sector": null,
         "actual": null
       }
     },
@@ -39,6 +40,7 @@
           "sueldo_segun_sector": 1063441.29,
           "resultado_real_pct": -2.78
         },
+        "aviso_sector": null,
         "actual": {
           "sueldo_actual": 1100000,
           "diferencia_pesos": -33517.02,
@@ -69,11 +71,12 @@
           "sueldo_segun_sector": 812337.25,
           "resultado_real_pct": -21.53
         },
+        "aviso_sector": null,
         "actual": null
       }
     },
     {
-      "descripcion": "El sector termina antes que el IPC: no registrado hasta su último mes",
+      "descripcion": "No registrado: corrido 5 meses, termina antes que el IPC",
       "entrada": {
         "sueldo": 1000000,
         "desde": "2024-01",
@@ -88,12 +91,13 @@
         "sector": {
           "sector": "sal_no_registrado",
           "nombre": "Privado no registrado",
-          "hasta": "2026-07",
-          "aumento_pct": 573.58,
-          "inflacion_pct": 183.38,
-          "sueldo_segun_sector": 6735765.43,
-          "resultado_real_pct": 137.69
+          "hasta": "2026-02",
+          "aumento_pct": 341.16,
+          "inflacion_pct": 151.43,
+          "sueldo_segun_sector": 4411607.3,
+          "resultado_real_pct": 75.46
         },
+        "aviso_sector": null,
         "actual": {
           "sueldo_actual": 2500000,
           "diferencia_pesos": -436537.76,
@@ -103,7 +107,7 @@
       }
     },
     {
-      "descripcion": "Mismo mes de inicio y fin: inflación cero",
+      "descripcion": "Mismo mes de inicio y fin: inflación cero y sin comparación con el sector",
       "entrada": {
         "sueldo": 750000,
         "desde": "2026-03",
@@ -116,15 +120,8 @@
         "hasta": "2026-03",
         "inflacion_pct": 0.0,
         "sueldo_equivalente": 750000.0,
-        "sector": {
-          "sector": "sal_total",
-          "nombre": "Total",
-          "hasta": "2026-03",
-          "aumento_pct": 0.0,
-          "inflacion_pct": 0.0,
-          "sueldo_segun_sector": 750000.0,
-          "resultado_real_pct": 0.0
-        },
+        "sector": null,
+        "aviso_sector": "Para comparar con el sector, elegí un mes final posterior al inicial.",
         "actual": {
           "sueldo_actual": 750000,
           "diferencia_pesos": 0.0,
@@ -156,12 +153,79 @@
           "sueldo_segun_sector": 1489715.99,
           "resultado_real_pct": -4.86
         },
+        "aviso_sector": null,
         "actual": {
           "sueldo_actual": 1500000,
           "diferencia_pesos": -65866.74,
           "resultado_real_pct": -4.21,
           "ajuste_para_empatar_pct": 4.39
         }
+      }
+    },
+    {
+      "descripcion": "Sueldo actual que le gana a la inflación",
+      "entrada": {
+        "sueldo": 300000,
+        "desde": "2023-12",
+        "hasta": "2026-09",
+        "sector": "sal_privado",
+        "sueldo_actual": 1500000
+      },
+      "esperado": {
+        "desde": "2023-12",
+        "hasta": "2026-09",
+        "inflacion_pct": 254.19,
+        "sueldo_equivalente": 1062564.68,
+        "sector": {
+          "sector": "sal_privado",
+          "nombre": "Privado registrado",
+          "hasta": "2026-07",
+          "aumento_pct": 272.98,
+          "inflacion_pct": 241.8,
+          "sueldo_segun_sector": 1118952.99,
+          "resultado_real_pct": 9.12
+        },
+        "aviso_sector": null,
+        "actual": {
+          "sueldo_actual": 1500000,
+          "diferencia_pesos": 437435.32,
+          "resultado_real_pct": 41.17,
+          "ajuste_para_empatar_pct": -29.16
+        }
+      }
+    },
+    {
+      "descripcion": "Mes inicial igual al último dato del sector: se calcula el IPC y se avisa",
+      "entrada": {
+        "sueldo": 850000,
+        "desde": "2026-07",
+        "sector": "sal_privado"
+      },
+      "esperado": {
+        "desde": "2026-07",
+        "hasta": "2026-09",
+        "inflacion_pct": 3.62,
+        "sueldo_equivalente": 880811.64,
+        "sector": null,
+        "aviso_sector": "El índice de salarios «Privado registrado» llega hasta jul-2026: para comparar con el sector, elegí un mes inicial anterior.",
+        "actual": null
+      }
+    },
+    {
+      "descripcion": "Mes inicial posterior al último dato del sector: se calcula el IPC y se avisa",
+      "entrada": {
+        "sueldo": 850000,
+        "desde": "2026-08",
+        "sector": "sal_privado"
+      },
+      "esperado": {
+        "desde": "2026-08",
+        "hasta": "2026-09",
+        "inflacion_pct": 1.93,
+        "sueldo_equivalente": 866435.69,
+        "sector": null,
+        "aviso_sector": "El índice de salarios «Privado registrado» llega hasta jul-2026: para comparar con el sector, elegí un mes inicial anterior.",
+        "actual": null
       }
     }
   ],

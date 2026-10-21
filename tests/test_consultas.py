@@ -1,8 +1,9 @@
 """Las consultas de negocio: estructura, y sus números contra un cálculo independiente con pandas."""
 
+import pandas as pd
 import pytest
 
-from inflationarg import db
+from inflationarg import db, formato
 
 
 @pytest.fixture(scope="module")
@@ -34,10 +35,27 @@ def test_salario_real_contra_pandas(resultados, raw):
     }
     filas = {f["serie_id"]: f for f in resultados["01_respuesta_principal"]["filas"]}
     for serie_id, columna in columnas.items():
-        w = raw("indice_salarios.csv", columna)
-        real = 100 * (w["2026-07"] / w["2016-12"]) / (ipc["2026-07"] / ipc["2016-12"])
-        assert filas[serie_id]["indice_real"] == pytest.approx(real, abs=0.006)
-        assert filas[serie_id]["hasta"] == "jul-2026"
+        w = raw("indice_salarios.csv", columna).dropna()
+        if serie_id == "sal_no_registrado":
+            # Se publica con 5 meses de rezago: el dato fechado t mide el mes t - 5.
+            w.index = (pd.PeriodIndex(w.index, freq="M") - 5).strftime("%Y-%m")
+        hasta = w.index.max()
+        real = 100 * (w[hasta] / w["2016-12"]) / (ipc[hasta] / ipc["2016-12"])
+        assert filas[serie_id]["indice_real"] == pytest.approx(real, abs=0.006), serie_id
+        assert filas[serie_id]["hasta"] == formato.mes(hasta + "-01")
+    assert filas["sal_no_registrado"]["hasta"] == "feb-2026"
+    assert filas["sal_total"]["hasta"] == "jul-2026"
+
+
+def test_no_registrado_corrido_cinco_meses(con, raw):
+    publicado = raw("indice_salarios.csv", "indice_salarios_no_registrado_sector_privado")
+    en_base = dict(con.execute("SELECT fecha, valor FROM fact_valor WHERE serie_id = 'sal_no_registrado'").fetchall())
+    assert en_base["2026-02-01"] == publicado["2026-07"]
+    assert en_base["2024-01-01"] == publicado["2024-06"]
+    # staging conserva la fecha de publicación (la que valida la QA)
+    assert con.execute("SELECT MAX(fecha) FROM stg_valor WHERE serie_id = 'sal_no_registrado'").fetchone() == (
+        "2026-07-01",
+    )
 
 
 def test_respuesta_principal_ordenada_por_ranking(resultados):
@@ -106,7 +124,8 @@ def test_vigencia(resultados):
     assert filas == {
         "Poder de compra en canastas": "2026-07-01",
         "Salario en dólares": "2026-07-01",
-        "Salario real por sector": "2026-07-01",
+        "Salario real: total, registrados, privado y público": "2026-07-01",
+        "Salario real: privado no registrado": "2026-02-01",
         "Inflación, rubros y regiones": "2026-09-01",
     }
 
@@ -117,3 +136,18 @@ def test_pico_interanual_de_toda_la_serie(dashboard, raw):
     pico = dashboard["kpis"]["pico_interanual"]
     assert pico["inflacion_interanual_pct"] == pytest.approx(interanual.max(), abs=0.006)
     assert pico["mes"] == "abr-2024" and interanual.idxmax() == "2024-04"
+
+
+def test_mejor_y_peor_sector_por_anio(resultados):
+    filas = {f["anio"]: f for f in resultados["02_ganadores_por_anio"]["filas"]}
+    # El último año compara a todos los sectores en el mismo período (hasta el último mes común).
+    assert filas[2026]["hasta"] == "feb-2026"
+    assert filas[2017]["ganador"] == "Salarios – privado registrado"
+    for f in filas.values():
+        valores = {
+            "Salarios – privado registrado": f["privado_registrado"],
+            "Salarios – sector público": f["publico"],
+            "Salarios – privado no registrado": f["no_registrado"],
+        }
+        assert valores[f["ganador"]] == max(valores.values())
+        assert valores[f["perdedor"]] == min(valores.values())

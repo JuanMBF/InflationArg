@@ -27,7 +27,7 @@
           <summary>Ver el detalle ({{ r.filas|length }} {{ "fila" if r.filas|length == 1 else "filas" }})</summary>
           <section class="tabla-scroll" tabindex="0" aria-label="Detalle: {{ r.titulo }}">
             <table>
-              <thead><tr>{% for c in r.filas[0] %}<th scope="col">{{ c|replace("_", " ")|capitalize }}</th>{% endfor %}</tr></thead>
+              <thead><tr>{% for c in r.filas[0] %}<th scope="col">{{ c|etiqueta }}</th>{% endfor %}</tr></thead>
               <tbody>
               {% for f in r.filas %}<tr>{% for c, v in f.items() %}<td class="{{ v|clase_celda(c) }}">{{ v|celda(c) }}</td>{% endfor %}</tr>{% endfor %}
               </tbody>
@@ -65,7 +65,9 @@
   <div class="tarjeta texto">
     <h2 id="limites-titulo">Límites que conviene saber</h2>
     <ul>
-      <li>El índice del <strong>sector privado no registrado</strong> se publica con un rezago de cinco meses respecto del resto (lo aclara el INDEC en cada informe): sus movimientos recientes son menos comparables mes a mes.</li>
+      <li>El índice del <strong>sector privado no registrado</strong> se publica con cinco meses de rezago (lo aclara el INDEC en cada informe): el dato del mes t refleja salarios del mes t−5. Acá se corre cinco meses antes de deflactar, por eso llega hasta {{ d.kpis.salario_real_no_registrado.hasta }}. El índice <strong>total</strong> del INDEC incluye ese componente tal como se publica (pesa cerca del 20 %), así que su caída de comienzos de 2024 se ve algo exagerada.</li>
+      <li>El <strong>RIPTE</strong> y el <strong>salario mínimo</strong> son montos brutos (antes de los aportes personales, cerca del 17 %): en mano compran proporcionalmente menos canastas.</li>
+      <li>El <strong>haber mínimo jubilatorio</strong> no incluye el bono previsional que ANSES paga aparte por decreto (de $ 70.000 desde marzo de 2024), así que subestima lo que cobra quien percibe la mínima.</li>
       <li>El <strong>RIPTE</strong> es el promedio de trabajadores estables registrados; no representa a quienes trabajan en negro.</li>
       <li>La <strong>Canasta Básica Total</strong> se valoriza para GBA; en otras regiones el costo es distinto.</li>
       <li>Los datos son los publicados a la fecha de descarga; el INDEC y otras fuentes pueden revisarlos. Por eso hay un chequeo que compara la API contra los CSV.</li>

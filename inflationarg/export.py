@@ -77,9 +77,13 @@ def datos_dashboard(con: sqlite3.Connection, consultas: dict, reporte: Reporte) 
         "WHERE grupo IN ('ipc_categoria') OR serie_id = 'ipc_nacional'"
     )
     regiones = q("SELECT fecha, region, var_interanual * 100 AS v FROM v_variacion WHERE grupo = 'ipc_region'")
-    poder = q(
+    # Desde la base del análisis hasta el último mes con RIPTE (la serie principal del gráfico).
+    poder = db.consultar(
+        con,
         "SELECT fecha, cbt_por_ripte AS ripte, cbt_por_smvm AS smvm, cbt_por_haber_minimo AS haber_minimo "
-        "FROM v_poder_compra ORDER BY fecha"
+        "FROM v_poder_compra WHERE fecha >= :desde "
+        "AND fecha <= (SELECT MAX(fecha) FROM v_poder_compra WHERE cbt_por_ripte IS NOT NULL) ORDER BY fecha",
+        desde=config.INICIO_ANALISIS,
     )
     usd = db.consultar(
         con,
@@ -173,7 +177,7 @@ def exportar_power_bi(con: sqlite3.Connection, destino: Path) -> list[Path]:
     destino.mkdir(parents=True, exist_ok=True)
     tablas = {
         "dim_fecha": "SELECT fecha, anio, mes, trimestre, etiqueta FROM dim_fecha ORDER BY fecha",
-        "dim_serie": "SELECT serie_id, nombre, grupo, region, unidad, base, fuente FROM dim_serie",
+        "dim_serie": "SELECT serie_id, nombre, grupo, region, unidad, base, fuente, desfase_meses FROM dim_serie",
         "fact_valor": "SELECT fecha, serie_id, valor, estado FROM fact_valor ORDER BY serie_id, fecha",
         "salario_real": "SELECT fecha, serie_id, indice_nominal, indice_real, var_real_interanual "
         "FROM v_salario_real ORDER BY serie_id, fecha",

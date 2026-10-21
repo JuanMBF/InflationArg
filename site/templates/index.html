@@ -26,7 +26,7 @@
     {% set peor = t.peor_sector %}
     {{ kpi(peor.var_real_pct|pct(1, true), "Salario real: " ~ peor.sector, "el sector con peor resultado, " ~ peor.hasta ~ " vs. dic-2016", "neg" if peor.var_real_pct < 0 else "pos") }}
     {{ kpi(k.inflacion_interanual.valor|pct(1), "Inflación interanual", k.inflacion_interanual.mes ~ " · " ~ k.inflacion_mensual.valor|pct(1) ~ " mensual") }}
-    {{ kpi(k.canastas_ripte.ultimo.cbt_por_ripte|numero(2), "Canastas que compra el salario promedio", k.canastas_ripte.ultimo.mes ~ " · eran " ~ k.canastas_ripte.inicio.cbt_por_ripte|numero(2) ~ " en " ~ k.canastas_ripte.inicio.mes) }}
+    {{ kpi(k.canastas_ripte.ultimo.cbt_por_ripte|numero(2), "Canastas que compra el salario promedio (RIPTE)", k.canastas_ripte.ultimo.mes ~ " · eran " ~ k.canastas_ripte.inicio.cbt_por_ripte|numero(2) ~ " en " ~ k.canastas_ripte.inicio.mes) }}
   </div>
 </section>
 
@@ -34,7 +34,7 @@
   <div class="tarjeta">
     <div class="tarjeta__cabecera">
       <h2 id="principal-titulo">Salario real por sector</h2>
-      <p class="nota">Índice de salarios del INDEC deflactado por el IPC. 100 = poder de compra de diciembre de 2016. Datos hasta {{ k.salario_real_total.hasta }}.</p>
+      <p class="nota">Índice de salarios del INDEC deflactado por el IPC. 100 = poder de compra de diciembre de 2016. Datos hasta {{ k.salario_real_total.hasta }}; el privado no registrado, hasta {{ k.salario_real_no_registrado.hasta }}, porque el INDEC lo publica con cinco meses de rezago.</p>
     </div>
     {{ grafico("g-salario-real", "salario_real", "Líneas del salario real por sector entre diciembre de 2016 y " ~ k.salario_real_total.hasta ~ ". " ~ t.detalle) }}
     {{ tabla(d.consultas["01_respuesta_principal"], "Ver la tabla del gráfico") }}
@@ -47,8 +47,8 @@
     {% for h in t.hallazgos %}
     <article class="hallazgo">
       <p class="hallazgo__num" aria-hidden="true">{{ "%02d"|format(loop.index) }}</p>
-      <h3>{{ h.titulo }}</h3>
-      <p>{{ h.texto }}</p>
+      <h3>{{ h.titulo|sin_corte }}</h3>
+      <p>{{ h.texto|sin_corte }}</p>
       <a href="{{ base }}{{ h.enlace }}">Ver en el dashboard<span class="sr"> ({{ h.titulo }})</span> →</a>
     </article>
     {% endfor %}
@@ -57,12 +57,12 @@
 
 <section class="contenedor seccion" aria-labelledby="como-titulo">
   <h2 id="como-titulo">Cómo está hecho</h2>
-  <p class="bajada">Un solo comando corre todo offline en menos de un minuto: descarga verificada, QA de datos, base SQLite, consultas SQL, Excel, Power BI y este sitio.</p>
+  <p class="bajada">Un solo comando corre todo offline en menos de un minuto: descarga verificada, QA de datos, base SQLite, consultas SQL, Excel, el modelo en CSV para Power BI y este sitio.</p>
   <ol class="pasos">
     <li><span class="paso__etiqueta">1 · Extracción</span><strong>{{ d.qa.resultados[0].filas|length }} archivos oficiales</strong> con su sha256 verificado contra un manifiesto.</li>
     <li><span class="paso__etiqueta">2 · QA de datos</span><strong>{{ d.qa.resultados|length }} chequeos automáticos</strong> que detectaron y documentaron {{ d.qa.conteo.alerta }} anomalías reales.</li>
     <li><span class="paso__etiqueta">3 · SQL</span><strong>Modelo estrella en SQLite</strong> con vistas (CTEs y window functions) y {{ d.consultas|length }} consultas de negocio.</li>
-    <li><span class="paso__etiqueta">4 · Entrega</span><strong>Dashboard, calculadora, Excel y Power BI</strong> generados desde la misma base.</li>
+    <li><span class="paso__etiqueta">4 · Entrega</span><strong>Dashboard, calculadora, Excel y modelo para Power BI</strong> generados desde la misma base.</li>
   </ol>
   <div class="acciones">
     <a class="boton" href="{{ base }}sql/">Ver el SQL</a>

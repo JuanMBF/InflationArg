@@ -2,8 +2,10 @@
 -- Pregunta: ¿Qué rubros del IPC subieron más y cuáles menos?
 -- Lectura: acumulado_desde_dic2016_pct = cuánto subió cada rubro desde la base;
 -- veces = cuántas veces se multiplicó el precio (índice / 100).
--- ultimo_anio_pct = variación interanual del último mes. Las columnas "vs_general" restan
--- la variación del nivel general: positivo = el rubro se encareció más que el promedio.
+-- ultimo_anio_pct = variación interanual del último mes.
+-- acumulado_vs_general_pct = cuánto más caro (o más barato) quedó el rubro que el nivel general,
+-- en % (cociente de índices); ultimo_anio_vs_general_pp = interanual del rubro menos la del
+-- nivel general, en puntos porcentuales. Positivo = el rubro se encareció más que el promedio.
 -- =====================================================================
 WITH ultimo AS (
     SELECT MAX(fecha) AS fecha FROM v_variacion WHERE grupo = 'ipc_rubro'
