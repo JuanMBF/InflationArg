@@ -24,7 +24,7 @@
         <p>{{ r.detalle }}</p>
         {% if r.filas and r.nivel in ("alerta", "info", "error") %}
         <details class="tabla-detalle">
-          <summary>Ver el detalle ({{ r.filas|length }} filas)</summary>
+          <summary>Ver el detalle ({{ r.filas|length }} {{ "fila" if r.filas|length == 1 else "filas" }})</summary>
           <section class="tabla-scroll" tabindex="0" aria-label="Detalle: {{ r.titulo }}">
             <table>
               <thead><tr>{% for c in r.filas[0] %}<th scope="col">{{ c|replace("_", " ")|capitalize }}</th>{% endfor %}</tr></thead>
