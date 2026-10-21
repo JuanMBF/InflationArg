@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 import sqlite3
 from pathlib import Path
 
@@ -255,6 +256,8 @@ def _hoja_tabla(wb: Workbook, titulo: str, descripcion: str, df: pd.DataFrame, n
         ws.cell(row=fila0, column=j, value=formato.etiqueta(columna))
     for i, fila in enumerate(df.itertuples(index=False), start=fila0 + 1):
         for j, valor in enumerate(fila, start=1):
+            if isinstance(valor, str) and re.fullmatch(r"\d{4}-\d{2}-01", valor):
+                valor = mes(valor)  # "2026-02-01" -> "feb-2026", como en el sitio
             ws.cell(row=i, column=j, value=_limpio(valor.item() if hasattr(valor, "item") else valor))
     ultima = fila0 + len(df)
     if len(df):
@@ -275,6 +278,8 @@ def _hoja_tabla(wb: Workbook, titulo: str, descripcion: str, df: pd.DataFrame, n
 def exportar_excel(con: sqlite3.Connection, consultas: dict, reporte: Reporte, ruta: Path) -> Path:
     ruta.parent.mkdir(parents=True, exist_ok=True)
     wb = Workbook()
+    wb.properties.creator = "Juan Barros"
+    wb.properties.title = "¿Le ganaron los salarios a la inflación? Argentina 2016–2026"
     portada = wb.active
     portada.title = "Leeme"
     parametros = dict(con.execute("SELECT clave, valor FROM parametro").fetchall())

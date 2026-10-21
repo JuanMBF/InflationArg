@@ -109,7 +109,7 @@ async function revisarPagina(navegador, origen, ruta, ancho, tema, axeFuente) {
     );
     for (const g of graficos) if (!g.ok) fallar(`${nombre}: el gráfico ${g.id} no se dibujó`);
 
-    if (ancho === 375 || ancho === 1280) {
+    {
       await pagina.addScriptTag({ content: axeFuente });
       const resultado = await pagina.evaluate(async () => {
         // Abrir los <details> para auditar también las tablas.
@@ -177,14 +177,24 @@ async function revisarCalculadora(navegador, origen) {
   await pagina.selectOption("#desde", "2024-01");
   await pagina.fill("#actual", "2.500.000");
   await pagina.click("button[type=submit]");
-  const texto = await pagina.textContent("#resultado-cuerpo");
+  // Los meses usan guion no separable (U+2011): se normaliza para comparar.
+  const leer = async (selector) => ((await pagina.textContent(selector)) || "").replace(/\u2011/g, "-");
+  const texto = await leer("#resultado-cuerpo");
   if (!/\$\s?[\d.]+/.test(texto) || !texto.includes("ene-2024")) fallar("calculadora: el resultado no aparece");
+  // Si el sueldo actual es justo el equivalente, empata: ni ▲ ni ▼.
+  const equivalente = (await leer(".resultado__principal")).replace(/[^\d]/g, "");
+  await pagina.fill("#actual", equivalente);
+  await pagina.click("button[type=submit]");
+  const empate = pagina.locator(".veredicto", { hasText: "empata con la inflación" });
+  if ((await empate.count()) !== 1 || (await empate.getAttribute("class")) !== "veredicto") {
+    fallar("calculadora: un sueldo actual igual al equivalente no se muestra como empate");
+  }
   if (await pagina.isVisible("#error")) fallar("calculadora: muestra error con datos válidos");
   // Mes inicial posterior al último dato del sector: calcula el IPC y avisa (sin error ni veredicto).
   await pagina.selectOption("#desde", "2026-08");
   await pagina.fill("#actual", "");
   await pagina.click("button[type=submit]");
-  const aviso = await pagina.textContent("#resultado-cuerpo");
+  const aviso = await leer("#resultado-cuerpo");
   if (await pagina.isVisible("#error") || !aviso.includes("llega hasta") || aviso.includes("le ganaron")) {
     fallar("calculadora: con un mes inicial sin datos del sector no muestra el ajuste por IPC con el aviso");
   }
@@ -196,9 +206,9 @@ async function revisarCalculadora(navegador, origen) {
   console.log("  ✓ calculadora: validación, resultado y avisos");
 
   await pagina.goto(origen + BASE + "dashboard/", { waitUntil: "networkidle" });
-  const antes = await pagina.textContent("#lectura-base");
+  const antes = await leer("#lectura-base");
   await pagina.selectOption("#base-salario", "2023-12");
-  const despues = await pagina.textContent("#lectura-base");
+  const despues = await leer("#lectura-base");
   if (!antes.startsWith("Desde dic-2016") || !despues.startsWith("Entre dic-2023") || antes === despues) {
     fallar(`dashboard: el selector de mes base no actualiza la lectura (${antes} → ${despues})`);
   }

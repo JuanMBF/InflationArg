@@ -96,8 +96,15 @@ def resaltar_sql(sql: str) -> Markup:
 
 
 def sin_corte(texto: str) -> str:
-    """Une "dic-2016" con un guion no separable para que el mes no se parta entre líneas."""
-    return re.sub(r"\b([a-z]{3})-(\d{4})\b", "\\1\u2011\\2", texto)
+    """Une "dic-2016" con un guion no separable y "$ 70.000" con un espacio no separable."""
+    texto = re.sub(r"\b([a-z]{3})-(\d{4})\b", "\\1\u2011\\2", texto)
+    return re.sub(r"\$ (?=\d)", "$\u00a0", texto)
+
+
+def _sin_cortes(pagina: str) -> str:
+    """Aplica sin_corte a todo el texto visible de la página (no a etiquetas, <script>, <style> ni <pre>)."""
+    partes = re.split(r"(?s)(<(?:script|style|pre)\b.*?</(?:script|style|pre)>|<[^>]+>)", pagina)
+    return "".join(p if i % 2 else sin_corte(p) for i, p in enumerate(partes))
 
 
 def celda(valor, columna: str) -> str:
@@ -236,9 +243,9 @@ def textos(datos: dict) -> dict:
         },
         {
             "titulo": "La inflación no fue igual en todo el país",
-            "texto": f"En el último año {reg_max['nombre'].removeprefix('IPC nivel general – ')} tuvo la inflación "
-            f"más alta ({formato.porcentaje(reg_max['interanual_pct'], 1)}) y "
-            f"{reg_min['nombre'].removeprefix('IPC nivel general – ')} la más baja "
+            "texto": f"En el último año la región {reg_max['nombre'].removeprefix('IPC nivel general – ')} tuvo la "
+            f"inflación más alta ({formato.porcentaje(reg_max['interanual_pct'], 1)}) y la región "
+            f"{reg_min['nombre'].removeprefix('IPC nivel general – ')}, la más baja "
             f"({formato.porcentaje(reg_min['interanual_pct'], 1)}).",
             "enlace": "dashboard/#regiones",
         },
@@ -325,11 +332,13 @@ def construir(datos: dict, salida: Path = config.DIR_BUILD, base: str | None = N
         )
         archivo = destino / ruta / "index.html"
         archivo.parent.mkdir(parents=True, exist_ok=True)
-        archivo.write_text(html_pagina, encoding="utf-8")
+        archivo.write_text(_sin_cortes(html_pagina), encoding="utf-8")
 
     (destino / "404.html").write_text(
-        env.get_template("404.html").render(
-            **contexto, ruta="404", titulo="Página no encontrada", descripcion="Página no encontrada.", nav=""
+        _sin_cortes(
+            env.get_template("404.html").render(
+                **contexto, ruta="404", titulo="Página no encontrada", descripcion="Página no encontrada.", nav=""
+            )
         ),
         encoding="utf-8",
     )
