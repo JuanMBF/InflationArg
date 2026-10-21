@@ -1,0 +1,118 @@
+{
+  "descargado": "2026-10-21",
+  "portal": "https://datos.gob.ar",
+  "licencia": "Datos abiertos del Estado argentino (CC BY 4.0)",
+  "nota": "La API rechaza el User-Agent por defecto de urllib (HTTP 403): hay que mandar uno propio.",
+  "archivos": [
+    {
+      "archivo": "ipc_nivel_general_regiones.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.3/download/indice-precios-al-consumidor-nivel-general-base-diciembre-2016-mensual.csv",
+      "fuente": "INDEC",
+      "descripcion": "IPC nivel general por región, base dic-2016",
+      "sha256": "2eceaa3f17e88bb30730f072f35d63c0963bb36c852bf8e934d28364202f6f2f",
+      "bytes": 42304,
+      "filas": 118,
+      "desde": "2016-12-01",
+      "hasta": "2026-09-01"
+    },
+    {
+      "archivo": "ipc_capitulos.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "fuente": "INDEC",
+      "descripcion": "IPC por división (12 rubros) y región, base dic-2016",
+      "sha256": "5bddc028fe16852c01573c5afb45089cabe8250d3f3e839233b69f378542d5e6",
+      "bytes": 96265,
+      "filas": 118,
+      "desde": "2016-12-01",
+      "hasta": "2026-09-01"
+    },
+    {
+      "archivo": "ipc_categorias.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "fuente": "INDEC",
+      "descripcion": "IPC núcleo, regulados y estacionales por región, base dic-2016",
+      "sha256": "e9c7c1522ce8b6eb99e769f690773f1eff103d6f9888c6fc3d38a7680685ff5d",
+      "bytes": 32739,
+      "filas": 118,
+      "desde": "2016-12-01",
+      "hasta": "2026-09-01"
+    },
+    {
+      "archivo": "indice_salarios.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/149/distribution/149.1/download/indice-salarios-periodicidad-mensual-base-octubre-2016.csv",
+      "fuente": "INDEC",
+      "descripcion": "Índice de salarios (total, registrado privado, público, no registrado), base oct-2016",
+      "sha256": "185e20488525ca79324b1c834ebed6d6ef7c9ceda7b06b74a7cd9d550273fea4",
+      "bytes": 6131,
+      "filas": 130,
+      "desde": "2015-10-01",
+      "hasta": "2026-07-01"
+    },
+    {
+      "archivo": "ripte.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/158/distribution/158.1/download/remuneracion-imponible-promedio-trabajadores-estables-ripte-total-pais-pesos-serie-mensual.csv",
+      "fuente": "Secretaría de Seguridad Social",
+      "descripcion": "RIPTE en pesos corrientes",
+      "sha256": "2b00bcdb63432c48a0778f2f40e443c7ccf9027ea403efe23a6be7dc140f686b",
+      "bytes": 7436,
+      "filas": 386,
+      "desde": "1994-07-01",
+      "hasta": "2026-08-01"
+    },
+    {
+      "archivo": "salario_minimo.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv",
+      "fuente": "Consejo del Salario / MTEySS",
+      "descripcion": "Salario mínimo, vital y móvil (incluye valores ya fijados a futuro)",
+      "sha256": "d95dedd9315ecfe8f8241a425ab16e6a86db6df2c4b6116e54042900de65056a",
+      "bytes": 22769,
+      "filas": 748,
+      "desde": "1965-01-01",
+      "hasta": "2027-04-01"
+    },
+    {
+      "archivo": "haber_minimo_jubilatorio.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/58/distribution/58.1/download/haber-minimo-jubilatorio-pesos-corrientes-valores-mensuales-desde-1971.csv",
+      "fuente": "ANSES",
+      "descripcion": "Haber mínimo jubilatorio en pesos corrientes",
+      "sha256": "85c8393c8e6856b837d977a267bf86f3b4ddc3b03d6d4a979962a77cdbf7d210",
+      "bytes": 17457,
+      "filas": 670,
+      "desde": "1971-01-01",
+      "hasta": "2026-10-01"
+    },
+    {
+      "archivo": "canastas_basicas.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/150/distribution/150.1/download/valores-canasta-basica-alimentos-canasta-basica-total-mensual-2016.csv",
+      "fuente": "INDEC",
+      "descripcion": "CBA y CBT por adulto equivalente (GBA), líneas de indigencia y pobreza",
+      "sha256": "33a8f7dba815cb77f21f062989552295e5e125d4c21013108c254e8cbfb0d5a1",
+      "bytes": 6997,
+      "filas": 126,
+      "desde": "2016-04-01",
+      "hasta": "2026-09-01"
+    },
+    {
+      "archivo": "tipo_cambio_bcra.csv",
+      "url": "https://infra.datos.gob.ar/catalog/sspm/dataset/92/distribution/92.1/download/reservas-internacionales-pasivos-financieros-bcra.csv",
+      "fuente": "BCRA",
+      "descripcion": "Tipo de cambio de valuación (promedio mensual) y reservas",
+      "sha256": "3839181e42f39aa255fabd27cdfc269a2b2790616a17c26557184fadfeb15de7",
+      "bytes": 48571,
+      "filas": 285,
+      "desde": "2003-01-01",
+      "hasta": "2026-09-01"
+    },
+    {
+      "archivo": "api_series_mensuales.csv",
+      "url": "https://apis.datos.gob.ar/series/api/series/?ids=<33 ids>&format=csv&header=ids&start_date=2016-01-01&limit=1000",
+      "fuente": "API Series de Tiempo (datos.gob.ar)",
+      "descripcion": "Misma información pedida a la API: 4 series vinieron vacías (recreación, restaurantes, IPC NOA, RIPTE). Se guarda solo para el chequeo de consistencia API vs. CSV de origen.",
+      "sha256": "d661af007e447808fed6443869abf22c30bd7241443d78967befa528f8910676",
+      "bytes": 34920,
+      "filas": 136,
+      "desde": "2016-01-01",
+      "hasta": "2027-04-01"
+    }
+  ]
+}
