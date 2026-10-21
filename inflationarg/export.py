@@ -15,14 +15,15 @@ from openpyxl import Workbook
 from openpyxl.chart import LineChart, Reference
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.hyperlink import Hyperlink
 from openpyxl.worksheet.table import Table, TableStyleInfo
 
-from . import config, db
+from . import config, db, formato
 from .calculadora import Indices
 from .formato import mes
 from .qa import Reporte
 
-COLORES_SECTOR = {
+NOMBRES_SECTOR = {
     "sal_privado": "Privado registrado",
     "sal_publico": "Público",
     "sal_no_registrado": "Privado no registrado",
@@ -137,7 +138,7 @@ def datos_dashboard(con: sqlite3.Connection, consultas: dict, reporte: Reporte) 
             "observaciones": con.execute("SELECT COUNT(*) FROM fact_valor").fetchone()[0],
         },
         "kpis": kpis,
-        "sectores": COLORES_SECTOR,
+        "sectores": NOMBRES_SECTOR,
         "regiones": config.REGIONES,
         "graficos": {
             "salario_real": _serie_ancha(real, "serie_id", "indice_real", 2),
@@ -203,18 +204,51 @@ TITULOS_HOJA = {
 }
 
 
+def _alto_texto(texto: str, ancho_columnas: float) -> float:
+    """Alto aproximado (en puntos) para que un texto con ajuste de línea se vea completo."""
+    lineas = max(1, math.ceil(len(texto) * 1.1 / max(ancho_columnas, 1)))
+    return 15 * lineas + 4
+
+
+def _enlace(celda, hoja: str) -> None:
+    """Hipervínculo interno a otra hoja del libro."""
+    celda.hyperlink = Hyperlink(ref=celda.coordinate, location=f"'{hoja}'!A1", display=str(celda.value))
+    celda.font = Font(color="0563C1", underline="single")
+
+
+def _preparar_impresion(ws) -> None:
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    ws.print_options.horizontalCentered = True
+
+
 def _hoja_tabla(wb: Workbook, titulo: str, descripcion: str, df: pd.DataFrame, nombre_tabla: str):
+    """Una hoja con título, la pregunta, cómo se lee y una tabla de Excel con formato."""
+    df = df[[c for c in df.columns if c not in formato.OCULTAS]]
     ws = wb.create_sheet(titulo)
+    for j, columna in enumerate(df.columns, start=1):
+        valores = [formato.etiqueta(columna)] + [str(v) for v in df.iloc[:, j - 1].tolist()]
+        ws.column_dimensions[get_column_letter(j)].width = min(max(len(v) for v in valores) + 3, 45)
+    ancho_total = sum(ws.column_dimensions[get_column_letter(j)].width for j in range(1, len(df.columns) + 1))
+    columnas_texto = max(len(df.columns), 6)
+
+    pregunta, _, lectura = descripcion.partition("Lectura:")
     ws["A1"] = titulo
     ws["A1"].font = Font(bold=True, size=14, color=AZUL)
-    ws["A2"] = descripcion
-    ws["A2"].alignment = Alignment(wrap_text=True, vertical="top")
-    ancho = max(len(df.columns), 1)
-    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=max(ancho, 6))
-    ws.row_dimensions[2].height = 60
-    fila0 = 4
+    for fila, texto, fuente in (
+        (2, pregunta.removeprefix("Pregunta: ").strip(), Font(bold=True, size=11)),
+        (3, f"Cómo se lee: {lectura.strip()}" if lectura else "", Font(italic=True, size=10, color="595959")),
+    ):
+        ws.cell(row=fila, column=1, value=texto or None).font = fuente
+        ws.cell(row=fila, column=1).alignment = Alignment(wrap_text=True, vertical="top")
+        ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=columnas_texto)
+        ws.row_dimensions[fila].height = _alto_texto(texto, max(ancho_total, 60))
+
+    fila0 = 5
     for j, columna in enumerate(df.columns, start=1):
-        ws.cell(row=fila0, column=j, value=columna)
+        ws.cell(row=fila0, column=j, value=formato.etiqueta(columna))
     for i, fila in enumerate(df.itertuples(index=False), start=fila0 + 1):
         for j, valor in enumerate(fila, start=1):
             ws.cell(row=i, column=j, value=_limpio(valor.item() if hasattr(valor, "item") else valor))
@@ -224,13 +258,13 @@ def _hoja_tabla(wb: Workbook, titulo: str, descripcion: str, df: pd.DataFrame, n
         tabla = Table(displayName=nombre_tabla, ref=ref)
         tabla.tableStyleInfo = TableStyleInfo(name="TableStyleMedium2", showRowStripes=True)
         ws.add_table(tabla)
-    for j, columna in enumerate(df.columns, start=1):
-        valores = [str(columna)] + [str(v) for v in df.iloc[:, j - 1].tolist()]
-        ws.column_dimensions[get_column_letter(j)].width = min(max(len(v) for v in valores) + 2, 45)
+    for j in range(1, len(df.columns) + 1):
         if pd.api.types.is_float_dtype(df.iloc[:, j - 1]):
             for i in range(fila0 + 1, ultima + 1):
                 ws.cell(row=i, column=j).number_format = "#,##0.00"
     ws.freeze_panes = ws.cell(row=fila0 + 1, column=1)
+    _enlace(ws.cell(row=ultima + 2, column=1, value="← Volver al índice"), "Leeme")
+    _preparar_impresion(ws)
     return ws
 
 
@@ -240,19 +274,42 @@ def exportar_excel(con: sqlite3.Connection, consultas: dict, reporte: Reporte, r
     portada = wb.active
     portada.title = "Leeme"
     parametros = dict(con.execute("SELECT clave, valor FROM parametro").fetchall())
-    lineas = [
-        ("¿Le ganaron los salarios a la inflación? Argentina 2016–2026", Font(bold=True, size=16, color=AZUL)),
-        (f"Datos oficiales (INDEC, BCRA, ANSES, MTEySS) descargados el {parametros['fecha_descarga']}.", None),
-        ("Cada hoja numerada responde una pregunta de negocio y sale de una consulta SQL de sql/consultas.", None),
-        ("La hoja 'Salario real mensual' tiene la serie completa y el gráfico.", None),
-        ("La hoja 'QA' resume los chequeos de calidad de datos.", None),
-        ("Autor: Juan Barros · github.com/JuanMBF/InflationArg", None),
+    descarga = parametros["fecha_descarga"]
+    portada["A1"] = "¿Le ganaron los salarios a la inflación? Argentina 2016–2026"
+    portada["A1"].font = Font(bold=True, size=16, color=AZUL)
+    portada["A2"] = (
+        "Datos oficiales de INDEC, BCRA, ANSES y MTEySS descargados el "
+        f"{descarga[8:10]}/{descarga[5:7]}/{descarga[:4]}. "
+        "Cada hoja numerada responde una pregunta de negocio con el resultado de una consulta SQL de sql/consultas."
+    )
+    portada["A2"].alignment = Alignment(wrap_text=True, vertical="top")
+    portada.merge_cells("A2:B2")
+    portada.row_dimensions[2].height = 34
+    portada["A4"], portada["B4"] = "Hoja", "Qué responde"
+    for celda in (portada["A4"], portada["B4"]):
+        celda.font = Font(bold=True, color="FFFFFF")
+        celda.fill = PatternFill("solid", fgColor=AZUL)
+    indice = [
+        (
+            TITULOS_HOJA.get(nombre, nombre[:31]),
+            datos["descripcion"].partition("Lectura:")[0].removeprefix("Pregunta: "),
+        )
+        for nombre, datos in consultas.items()
     ]
-    for i, (texto, fuente) in enumerate(lineas, start=1):
-        portada.cell(row=i, column=1, value=texto)
-        if fuente:
-            portada.cell(row=i, column=1).font = fuente
-    portada.column_dimensions["A"].width = 100
+    indice += [
+        ("Salario real mensual", "La serie mensual de salario real por sector, con gráfico."),
+        ("QA", "Los chequeos automáticos de calidad de datos y su resultado."),
+    ]
+    for i, (hoja, que) in enumerate(indice, start=5):
+        _enlace(portada.cell(row=i, column=1, value=hoja), hoja)
+        portada.cell(row=i, column=1).alignment = Alignment(vertical="top")
+        portada.cell(row=i, column=2, value=que.strip()).alignment = Alignment(wrap_text=True, vertical="top")
+    fila_autor = 6 + len(indice)
+    portada.cell(row=fila_autor, column=1, value="Autor: Juan Barros · github.com/JuanMBF/InflationArg")
+    portada.cell(row=fila_autor, column=1).font = Font(italic=True, color="595959")
+    portada.column_dimensions["A"].width = 26
+    portada.column_dimensions["B"].width = 95
+    _preparar_impresion(portada)
 
     for nombre, datos in consultas.items():
         df = pd.DataFrame(datos["filas"], columns=datos["columnas"])
@@ -260,14 +317,15 @@ def exportar_excel(con: sqlite3.Connection, consultas: dict, reporte: Reporte, r
 
     real = db.consultar(con, "SELECT fecha, serie_id, indice_real FROM v_salario_real")
     ancho = real.pivot(index="fecha", columns="serie_id", values="indice_real").sort_index()
-    ancho = ancho[[c for c in COLORES_SECTOR if c in ancho.columns]]
-    ancho.columns = [COLORES_SECTOR[c] for c in ancho.columns]
+    ancho = ancho[[c for c in NOMBRES_SECTOR if c in ancho.columns]]
+    ancho.columns = [NOMBRES_SECTOR[c] for c in ancho.columns]
     ancho.index = [mes(f) for f in ancho.index]
     tabla = ancho.round(2).reset_index(names="mes")
     ws = _hoja_tabla(
         wb,
         "Salario real mensual",
-        "Índice de salario real (dic-2016 = 100) por sector: índice de salarios del INDEC deflactado por el IPC.",
+        "Pregunta: ¿Cómo evolucionó mes a mes el salario real de cada sector? "
+        "Lectura: índice de salarios del INDEC deflactado por el IPC; 100 = poder de compra de dic-2016.",
         tabla,
         "t_salario_real",
     )
@@ -275,18 +333,41 @@ def exportar_excel(con: sqlite3.Connection, consultas: dict, reporte: Reporte, r
     grafico.title = "Salario real por sector (dic-2016 = 100)"
     grafico.y_axis.title = "Índice"
     grafico.height, grafico.width = 9, 22
-    datos = Reference(ws, min_col=2, max_col=1 + len(ancho.columns), min_row=4, max_row=4 + len(tabla))
+    datos = Reference(ws, min_col=2, max_col=1 + len(ancho.columns), min_row=5, max_row=5 + len(tabla))
     grafico.add_data(datos, titles_from_data=True)
-    grafico.set_categories(Reference(ws, min_col=1, min_row=5, max_row=4 + len(tabla)))
-    ws.add_chart(grafico, "H4")
+    grafico.set_categories(Reference(ws, min_col=1, min_row=6, max_row=5 + len(tabla)))
+    # openpyxl 3.1 marca los ejes como borrados: sin esto Excel no muestra fechas ni valores.
+    grafico.x_axis.delete = False
+    grafico.y_axis.delete = False
+    grafico.y_axis.numFmt = "0"
+    grafico.y_axis.scaling.min = math.floor(float(ancho.min().min()) / 10) * 10
+    grafico.x_axis.tickLblSkip = 12
+    grafico.x_axis.tickMarkSkip = 12
+    for serie, (color, guion) in zip(
+        grafico.series, [("2A78D6", None), ("EB6834", None), ("1BAF7A", None), ("121211", "dash")], strict=False
+    ):
+        serie.smooth = False
+        serie.graphicalProperties.line.solidFill = color
+        serie.graphicalProperties.line.width = 22000
+        if guion:
+            serie.graphicalProperties.line.dashStyle = guion
+    ws.add_chart(grafico, "H5")
 
     qa_df = pd.DataFrame([{"nivel": r.nivel, "chequeo": r.titulo, "resultado": r.detalle} for r in reporte.resultados])
-    ws = _hoja_tabla(wb, "QA", "Chequeos automáticos de calidad de datos.", qa_df, "t_qa")
+    ws = _hoja_tabla(
+        wb,
+        "QA",
+        "Pregunta: ¿Los datos son confiables? Lectura: un error frena el pipeline; una alerta es una anomalía "
+        "real de las fuentes que se documenta y, si corresponde, se aparta del análisis.",
+        qa_df,
+        "t_qa",
+    )
     colores = {"ok": "C6EFCE", "info": "DDEBF7", "alerta": "FFEB9C", "error": "FFC7CE"}
-    for i, r in enumerate(reporte.resultados, start=5):
-        ws.cell(row=i, column=1).fill = PatternFill("solid", fgColor=colores[r.nivel])
-        ws.cell(row=i, column=3).alignment = Alignment(wrap_text=True)
     ws.column_dimensions["C"].width = 100
+    for i, r in enumerate(reporte.resultados, start=6):
+        ws.cell(row=i, column=1).fill = PatternFill("solid", fgColor=colores[r.nivel])
+        ws.cell(row=i, column=3).alignment = Alignment(wrap_text=True, vertical="top")
+        ws.row_dimensions[i].height = _alto_texto(r.detalle, 100)
 
     wb.save(ruta)
     return ruta

@@ -45,10 +45,5 @@ def construir_mini(stg_filas, marcas=(), fecha_corte="2017-06-01", inicio="2016-
     stg = pd.DataFrame(stg_filas, columns=["fecha", "serie_id", "valor"]).assign(archivo="test.csv")
     marcas_df = pd.DataFrame(list(marcas), columns=["fecha", "serie_id", "motivo"])
     con = db.conectar()
-    original = db.INICIO_FACT
-    db.INICIO_FACT = inicio
-    try:
-        db.construir(con, stg, marcas_df, fecha_corte, "2017-06-15")
-    finally:
-        db.INICIO_FACT = original
+    db.construir(con, stg, marcas_df, fecha_corte, "2017-06-15", inicio_fact=inicio)
     return con
