@@ -290,6 +290,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 td.neg { color: var(--negativo); }
 .tabla-simple { margin-top: 1rem; border: 1px solid var(--borde); border-radius: 10px; overflow: hidden; }
 .tabla-simple caption { text-align: left; font-weight: 650; padding-bottom: 0.4rem; }
+.tabla-simple th, .tabla-simple td { white-space: normal; }
 
 /* ---------- Hallazgos y pasos ---------- */
 .grilla-hallazgos { display: grid; gap: 1rem; grid-template-columns: 1fr; }
