@@ -166,8 +166,10 @@
       var hasta = i === ultimo ? "" : " (a " + etiquetaMes(g.fechas[i]) + ")";
       return NOMBRES[id].toLowerCase() + " " + (v > 0 ? "+" : "") + numero(v, 1).replace("-", "−") + "\u00a0%" + hasta;
     });
-    nodo.textContent =
-      "Entre " + etiquetaMes(g.fechas[0]) + " y " + etiquetaMes(g.fechas[ultimo]) + ": " + partes.join(", ") + ".";
+    var texto = "Entre " + etiquetaMes(g.fechas[0]) + " y " + etiquetaMes(g.fechas[ultimo]) + ": " + partes.join(", ") + ".";
+    // Guion no separable en los meses, como en el resto del sitio.
+    nodo.textContent = texto.replace(/\b([a-z]{3})-(\d{4})\b/g, "$1\u2011$2");
+    return texto;
   }
 
   // ------------------------------------------------------------------ gráficos
@@ -362,10 +364,12 @@
       estado.base = selectorBase.value;
       selectorBase.addEventListener("change", function () {
         estado.base = selectorBase.value;
-        lecturaBase(datos);
+        var lectura = lecturaBase(datos);
         var c = colores();
         graficos.forEach(function (g) {
-          if (g.tipo === "salario_real") g.chart.setOption(constructores.salario_real(g.el, datos, c), true);
+          if (g.tipo !== "salario_real") return;
+          g.chart.setOption(constructores.salario_real(g.el, datos, c), true);
+          g.el.setAttribute("aria-label", "Salario real por sector, " + etiquetaMes(estado.base) + " = 100. " + lectura);
         });
       });
     }
@@ -379,7 +383,10 @@
         });
         var c = colores();
         graficos.forEach(function (g) {
-          if (g.tipo === control) g.chart.setOption(constructores[g.tipo](g.el, datos, c), true);
+          if (g.tipo !== control) return;
+          g.chart.setOption(constructores[g.tipo](g.el, datos, c), true);
+          // El texto alternativo describe lo que muestra el gráfico ahora.
+          if (boton.hasAttribute("data-aria")) g.el.setAttribute("aria-label", boton.getAttribute("data-aria"));
         });
       });
     });

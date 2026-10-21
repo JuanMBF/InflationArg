@@ -48,8 +48,9 @@ function mostrar(r, sueldo) {
     const s = r.sector;
     const gana = s.resultado_real_pct >= 0;
     const empate = Math.abs(s.resultado_real_pct) < 0.05;
-    html += `<p class="veredicto veredicto--${gana ? "gana" : "pierde"}">
-      ${gana ? "▲" : "▼"} Entre ${mes(r.desde)} y ${mes(s.hasta)} los salarios del sector
+    const clase = empate ? "veredicto" : `veredicto veredicto--${gana ? "gana" : "pierde"}`;
+    html += `<p class="${clase}">
+      ${empate ? "=" : gana ? "▲" : "▼"} Entre ${mes(r.desde)} y ${mes(s.hasta)} los salarios del sector
       ${escapar(s.nombre.toLowerCase())} ${
         empate
           ? "empataron con la inflación."
@@ -59,14 +60,17 @@ function mostrar(r, sueldo) {
   if (r.actual) {
     const a = r.actual;
     const gana = a.diferencia_pesos >= 0;
-    html += gana
+    html += Math.abs(a.resultado_real_pct) < 0.05
+      ? `<p class="veredicto">= Con ${pesos(a.sueldo_actual)} en ${mes(r.hasta)}, el sueldo empata con la inflación.</p>`
+      : gana
       ? `<p class="veredicto veredicto--gana">▲ Con ${pesos(a.sueldo_actual)} en ${mes(r.hasta)}, se cobra ${pesos(a.diferencia_pesos)}
          más de lo necesario: ${pct(a.resultado_real_pct, true)} real.</p>`
       : `<p class="veredicto veredicto--pierde">▼ Con ${pesos(a.sueldo_actual)} en ${mes(r.hasta)}, faltan ${pesos(-a.diferencia_pesos)}
          por mes: hay que ajustar ${pct(a.ajuste_para_empatar_pct)} para empatar con la inflación
          (pérdida real de ${pct(Math.abs(a.resultado_real_pct))}).</p>`;
   }
-  cuerpo.innerHTML = html;
+  // Guion no separable: "feb-2026" no se corta entre líneas.
+  cuerpo.innerHTML = html.replace(/\b([a-z]{3})-(\d{4})\b/g, "$1\u2011$2");
 }
 
 function marcarError(campo, mensaje) {

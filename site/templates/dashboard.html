@@ -48,8 +48,8 @@
       <h2 id="t-inflacion">2. Inflación mensual e interanual</h2>
       <p class="lectura">El pico mensual fue {{ k.pico_mensual.inflacion_mensual_pct|pct(1) }} en {{ k.pico_mensual.mes }}; el interanual, {{ k.pico_interanual.inflacion_interanual_pct|pct(1) }} en {{ k.pico_interanual.mes }}. En {{ k.inflacion_mensual.mes }}: {{ k.inflacion_mensual.valor|pct(1) }} mensual.</p>
       <div class="segmentado" role="group" aria-label="Medida de inflación">
-        <button type="button" data-control="inflacion" data-valor="mensual" aria-pressed="true">Mensual</button>
-        <button type="button" data-control="inflacion" data-valor="interanual" aria-pressed="false">Interanual</button>
+        <button type="button" data-control="inflacion" data-valor="mensual" aria-pressed="true" data-aria="Inflación mensual del IPC nacional desde enero de 2017. Pico de {{ k.pico_mensual.inflacion_mensual_pct|pct(1) }} en {{ k.pico_mensual.mes }}.">Mensual</button>
+        <button type="button" data-control="inflacion" data-valor="interanual" aria-pressed="false" data-aria="Inflación interanual del IPC nacional desde diciembre de 2017. Pico de {{ k.pico_interanual.inflacion_interanual_pct|pct(1) }} en {{ k.pico_interanual.mes }}.">Interanual</button>
       </div>
     </div>
     {{ grafico("g-inflacion", "inflacion", "Inflación mensual del IPC nacional desde enero de 2017. Pico de " ~ k.pico_mensual.inflacion_mensual_pct|pct(1) ~ " en " ~ k.pico_mensual.mes ~ ".") }}
@@ -71,8 +71,8 @@
       <h2 id="t-rubros">4. Rubros del IPC</h2>
       <p class="lectura">Desde dic-2016, los precios de {{ rubros[0].rubro|lower }} se multiplicaron por {{ rubros[0].veces|numero(1) }} y los de {{ rubros[-1].rubro|lower }}, por {{ rubros[-1].veces|numero(1) }}. En el último año encabeza {{ (rubros|sort(attribute="puesto_ultimo_anio")|first).rubro|lower }}.</p>
       <div class="segmentado" role="group" aria-label="Período de los rubros">
-        <button type="button" data-control="rubros" data-valor="acumulado" aria-pressed="true">Desde dic-2016</button>
-        <button type="button" data-control="rubros" data-valor="anio" aria-pressed="false">Último año</button>
+        <button type="button" data-control="rubros" data-valor="acumulado" aria-pressed="true" data-aria="Ranking de rubros del IPC por suba acumulada desde diciembre de 2016.">Desde dic-2016</button>
+        <button type="button" data-control="rubros" data-valor="anio" aria-pressed="false" data-aria="Ranking de rubros del IPC por inflación del último año.">Último año</button>
       </div>
     </div>
     {{ grafico("g-rubros", "rubros", "Ranking de rubros del IPC por suba acumulada desde diciembre de 2016.", "alto") }}
