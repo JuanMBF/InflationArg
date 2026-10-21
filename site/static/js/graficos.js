@@ -154,10 +154,7 @@
       return base(el, c, {
         tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(1, "") }),
         xAxis: ejeMeses(g.fechas, c, el),
-        yAxis: ejeValor(c, function (v) { return numero(v, 0); }, {
-          min: function (v) { return Math.floor(v.min / 10) * 10; },
-          max: function (v) { return Math.ceil(v.max / 10) * 10; },
-        }),
+        yAxis: ejeValor(c, function (v) { return numero(v, 0); }, { scale: true }),
         series: series,
       });
     },
@@ -175,11 +172,11 @@
         legend: { show: false },
         grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true },
         tooltip: Object.assign(base(el, c, {}).tooltip, {
-          formatter: tooltipLineas(mensual ? 1 : 1, " %"),
+          formatter: tooltipLineas(mensual ? 1 : 1, "\u00a0%"),
           axisPointer: { type: mensual ? "shadow" : "line" },
         }),
         xAxis: eje,
-        yAxis: ejeValor(c, function (v) { return numero(v, 0) + " %"; }),
+        yAxis: ejeValor(c, function (v) { return numero(v, 0) + "\u00a0%"; }),
         series: [serie],
       });
     },
@@ -189,9 +186,9 @@
       var inicio = g.series.ipc_nacional.findIndex(function (v) { return v !== null; });
       var orden = ["ipc_nucleo", "ipc_regulados", "ipc_estacionales", "ipc_nacional"];
       return base(el, c, {
-        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(1, " %") }),
+        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(1, "\u00a0%") }),
         xAxis: ejeMeses(g.fechas.slice(inicio), c, el),
-        yAxis: ejeValor(c, function (v) { return numero(v, 0) + " %"; }),
+        yAxis: ejeValor(c, function (v) { return numero(v, 0) + "\u00a0%"; }),
         series: orden.map(function (id, i) {
           var general = id === "ipc_nacional";
           return linea(NOMBRES[id], g.series[id].slice(inicio), general ? c.texto : c.series[i], {
@@ -208,7 +205,7 @@
       filas.sort(function (a, b) { return a[campo] - b[campo]; });
       var nacional = d.consultas["07_regiones"].filas.filter(function (f) { return f.region === "nacional"; })[0];
       var general = acumulado ? 1 + nacional.acumulado_desde_dic2016_pct / 100 : nacional.interanual_pct;
-      var fmt = function (v) { return acumulado ? "×" + numero(v, 1) : numero(v, 1) + " %"; };
+      var fmt = function (v) { return acumulado ? "×" + numero(v, 1) : numero(v, 1) + "\u00a0%"; };
       var chico = angosto(el);
       return base(el, c, {
         legend: { show: false },
@@ -218,8 +215,8 @@
           textStyle: { color: c.texto },
           formatter: function (p) { return p.name + "<br><strong>" + fmt(p.value) + "</strong>"; },
         },
-        xAxis: ejeValor(c, function (v) { return acumulado ? "×" + numero(v, 0) : numero(v, 0) + " %"; }, {
-          axisLabel: { show: !chico, color: c.texto3, formatter: function (v) { return acumulado ? "×" + numero(v, 0) : numero(v, 0) + " %"; } },
+        xAxis: ejeValor(c, function (v) { return acumulado ? "×" + numero(v, 0) : numero(v, 0) + "\u00a0%"; }, {
+          axisLabel: { show: !chico, color: c.texto3, formatter: function (v) { return acumulado ? "×" + numero(v, 0) : numero(v, 0) + "\u00a0%"; } },
         }),
         yAxis: {
           type: "category",
@@ -247,7 +244,7 @@
       var g = d.graficos.poder_compra;
       var orden = ["ripte", "smvm", "haber_minimo"];
       return base(el, c, {
-        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(2, " CBT") }),
+        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(2, "\u00a0CBT") }),
         xAxis: ejeMeses(g.fechas, c, el),
         yAxis: ejeValor(c, function (v) { return numero(v, 0); }, { min: 0 }),
         series: orden.map(function (id, i) {
@@ -268,7 +265,7 @@
           trigger: "item", confine: true, backgroundColor: c.superficie, borderColor: c.borde, textStyle: { color: c.texto },
           formatter: function (p) { return p.name + "<br><strong>" + numero(p.value, 1) + " %</strong> interanual (" + filas[0].hasta + ")"; },
         },
-        xAxis: ejeValor(c, function (v) { return numero(v, 0) + " %"; }),
+        xAxis: ejeValor(c, function (v) { return numero(v, 0) + "\u00a0%"; }),
         yAxis: {
           type: "category", axisTick: { show: false }, axisLine: { lineStyle: { color: c.eje } },
           axisLabel: { color: c.texto2 },
@@ -279,7 +276,7 @@
           data: filas.map(function (f) {
             return { value: f.interanual_pct, itemStyle: { color: f.region === "nacional" ? c.texto3 : c.series[0], borderRadius: [0, 4, 4, 0] } };
           }),
-          label: { show: true, position: "right", color: c.texto2, formatter: function (p) { return numero(p.value, 1) + " %"; } },
+          label: { show: true, position: "right", color: c.texto2, formatter: function (p) { return numero(p.value, 1) + "\u00a0%"; } },
         }],
       });
     },
@@ -288,7 +285,7 @@
       var g = d.graficos.usd;
       var orden = ["ripte", "smvm", "haber_minimo"];
       return base(el, c, {
-        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(0, " US$") }),
+        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(0, "\u00a0US$") }),
         xAxis: ejeMeses(g.fechas, c, el),
         yAxis: ejeValor(c, function (v) { return "US$ " + numero(v, 0); }, { min: 0 }),
         series: orden.map(function (id, i) { return linea(NOMBRES[id], g.series[id], c.series[i]); }),

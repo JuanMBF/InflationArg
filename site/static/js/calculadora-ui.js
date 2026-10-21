@@ -12,7 +12,7 @@ const pesos = (v) =>
 const pct = (v, signo = false) =>
   (signo && v > 0 ? "+" : "") +
   new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(v).replace("-", "−") +
-  " %";
+  "\u00a0%";
 const mes = (aaaamm) => MESES[Number(aaaamm.slice(5, 7)) - 1] + "-" + aaaamm.slice(0, 4);
 
 function escapar(texto) {
@@ -32,11 +32,11 @@ function mostrar(r, sueldo) {
     ${pesos(sueldo)} en ${mes(r.desde)}.</p>
     <div class="resultado__grilla">
       ${dato(pct(r.inflacion_pct), `Inflación entre ${mes(r.desde)} y ${mes(r.hasta)}`)}
-      ${dato(pct(r.inflacion_pct), "Ajuste necesario para no perder")}`;
+      ${dato(pesos(r.sueldo_equivalente - sueldo), "Aumento mensual necesario para no perder")}`;
   if (r.sector) {
     const s = r.sector;
     html += `
-      ${dato(pct(s.aumento_pct), `Aumento de salarios ${escapar(s.nombre.toLowerCase())} hasta ${mes(s.hasta)}`)}
+      ${dato(pct(s.aumento_pct), `Aumento salarial del sector ${escapar(s.nombre.toLowerCase())} hasta ${mes(s.hasta)}`)}
       ${dato(pesos(s.sueldo_segun_sector), "Sueldo si hubiera seguido al sector")}`;
   }
   html += `</div>`;
