@@ -1,6 +1,8 @@
 name: Publicar sitio
 
-# En cada push a main se publica con la foto de datos del repo (reproducible).
+# Genera el sitio y lo publica en la rama gh-pages (GitHub Pages la sirve en
+# https://juanmbf.github.io/InflationArg/).
+# En cada push a main se usa la foto de datos del repo (reproducible).
 # Una vez por mes baja datos nuevos de datos.gob.ar y corre la QA:
 # si pasa, publica con los datos nuevos; si falla, publica con la foto.
 on:
@@ -11,16 +13,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  publicar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -39,17 +39,14 @@ jobs:
         run: python -m inflationarg all
       - name: Resumen de la QA
         run: cat build/qa/reporte.md >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: build/site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publicar en gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd build/site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Sitio generado desde ${GITHUB_SHA::7} (${{ github.event_name }})"
+          git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages

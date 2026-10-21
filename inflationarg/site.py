@@ -331,6 +331,7 @@ def _entorno(base: str) -> Environment:
         pesos=formato.pesos,
         mes=formato.mes,
         mes_largo=_mes_largo,
+        mes_largo_iso=lambda f: formato.mes(f, largo=True),
         celda=celda,
         clase_celda=clase_celda,
         sql=resaltar_sql,
