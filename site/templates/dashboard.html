@@ -37,7 +37,7 @@
           {% endfor %}
         </select>
       </div>
-      <p class="lectura lectura--dinamica" id="lectura-base" aria-live="polite">Desde dic-2016: {{ t.detalle[0]|lower }}{{ t.detalle[1:] }} El peor momento fue {{ k.salario_real_total.fecha_minimo }}.</p>
+      <p class="lectura lectura--dinamica" id="lectura-base" aria-live="polite">Desde dic-2016: {{ t.detalle[0]|lower }}{{ t.detalle[1:] }} El peor momento del salario total fue {{ k.salario_real_total.fecha_minimo }}.</p>
     </div>
     {{ grafico("g-salario-real", "salario_real", "Salario real por sector, dic-2016 = 100. " ~ t.detalle) }}
     {{ tabla(c["02_ganadores_por_anio"], "Tabla: qué sector salió mejor y peor parado cada año (var. real %)") }}

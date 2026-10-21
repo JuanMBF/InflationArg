@@ -22,7 +22,7 @@
 | **Total** | **78,2 (−21,8 %)** a jul-2026 | 62,1 en mar-2024 |
 | Público | 65,7 (−34,3 %) a jul-2026 | 61,0 en ene-2024 |
 
-¹ El INDEC publica el índice del privado no registrado con cinco meses de rezago: el dato de julio refleja salarios de febrero. El modelo lo corre cinco meses (`dim_serie.desfase_meses`) antes de deflactarlo; sin ese ajuste, la caída de 2023–2024 aparecía casi el doble de profunda (un piso de 36 en lugar de 53,5). El índice total del INDEC incluye ese componente tal como se publica (pesa cerca del 20 %), así que su piso de 2024 se ve algo exagerado.
+¹ El INDEC publica el índice del privado no registrado con cinco meses de rezago: el dato de julio refleja salarios de febrero. El modelo lo corre cinco meses (`dim_serie.desfase_meses`) antes de deflactarlo; sin ese ajuste, la caída de 2023–2024 aparecía bastante más profunda (un piso de 36 en lugar de 53,5). El índice total del INDEC incluye ese componente tal como se publica (pesa cerca del 20 %), así que su piso de 2024 se ve algo exagerado.
 
 ![Salario real por sector](docs/capturas/salario-real.png)
 
@@ -37,7 +37,7 @@ En el dashboard se puede **cambiar el mes base** ("Comparar contra"): la conclus
 5. **La inflación no fue igual en todo el país.** En el último año el NEA tuvo la más alta (36,9 %) y la Patagonia la más baja (30,3 %).
 6. **En dólares oficiales, el RIPTE todavía está abajo de 2017:** US$ 1.275 de promedio en 2026 (7 meses) contra US$ 1.442 en 2017; el mínimo fue US$ 851 en 2020.
 
-Todas estas cifras salen de la base: el sitio las genera desde las consultas SQL y los tests las verifican contra un cálculo independiente con pandas sobre los CSV oficiales.
+Todas estas cifras salen de la base: el sitio las genera desde las consultas SQL; los tests comparan el README con la base y verifican las principales contra un cálculo independiente con pandas sobre los CSV oficiales.
 
 <p align="center">
   <img src="docs/capturas/canastas.png" alt="Canastas Básicas Totales que compran el RIPTE, el salario mínimo y la jubilación mínima" width="49%">
@@ -95,7 +95,7 @@ La suite corre antes de cargar la base: un **error** frena el pipeline; una **al
 | Rangos plausibles | ✅ |
 | Valores con fecha futura | ⚠️ El salario mínimo trae nov-2026 a abr-2027 (ya fijados por resolución): se excluyen |
 | Valores repetidos sospechosos | ⚠️ **RIPTE ago-2026 = jun-2026 exacto** (1.915.878,76): queda con `estado = 'sospechoso'` y las vistas no lo usan |
-| Consistencia API vs. CSV | ⚠️ La API devolvió **vacías** 4 series que en los CSV están completas (IPC NOA, recreación, restaurantes, RIPTE), NEA incompleta y valores distintos al CSV en abr-2019 (5 regiones) y en NEA jul-2022 (la API implica +4,3 % y +10,9 % en julio y agosto; el CSV, +7,4 % y +7,6 %) |
+| Consistencia API vs. CSV | ⚠️ La API devolvió **vacías** 4 series que en los CSV están completas (IPC NOA, recreación, restaurantes, RIPTE), NEA incompleta y valores distintos al CSV en abr-2019 (5 regiones), en Cuyo jun-2021 y en NEA jul-2022 (la API implica +4,3 % y +10,9 % en julio y agosto; el CSV, +7,4 % y +7,6 %) |
 | Frescura | ✅ dentro del rezago habitual |
 | Alineación | ℹ️ Salarios hasta jul-2026 (el privado no registrado, hasta feb-2026 por su rezago), IPC hasta sep-2026: cada conclusión dice hasta qué mes vale |
 
@@ -148,7 +148,7 @@ make sitio   # validación HTML + Playwright y axe en 375/768/1280, claro y oscu
 | `ipc_region` | IPC nivel general: total país, GBA, Pampeana, NEA, NOA, Cuyo, Patagonia | índice dic-2016 = 100 | INDEC |
 | `ipc_categoria` | IPC núcleo, regulados, estacionales | índice dic-2016 = 100 | INDEC |
 | `ipc_rubro` | Las 12 divisiones del IPC (alimentos, vivienda, salud, etc.) | índice dic-2016 = 100 | INDEC |
-| `salario_indice` | Índice de salarios: total, registrados, privado registrado, público, privado no registrado | índice oct-2016 = 100 | INDEC |
+| `salario_indice` | Índice de salarios: total, registrados, privado registrado, público, privado no registrado | índice oct-2016 = 100 (el no registrado, por su rezago, en el dato publicado en oct-2016) | INDEC |
 | `ingreso_pesos` | RIPTE, salario mínimo vital y móvil, haber mínimo jubilatorio | pesos corrientes | Seg. Social, MTEySS, ANSES |
 | `canasta` | Canasta Básica Total y Alimentaria (adulto equivalente, GBA) | pesos | INDEC |
 | `tipo_cambio` | Tipo de cambio oficial de valuación (promedio mensual) | pesos por dólar | BCRA |

@@ -12,7 +12,7 @@ Cualquiera de estas dos opciones:
 | Archivo | Qué es | Clave |
 |---|---|---|
 | `dim_fecha.csv` | Un mes por fila: año, mes, trimestre, etiqueta (`sep-2026`) | `fecha` |
-| `dim_serie.csv` | Qué mide cada serie, su grupo, región, unidad, fuente y rezago de publicación (`desfase_meses`) | `serie_id` |
+| `dim_serie.csv` | Qué mide cada serie, su grupo, región, unidad, base, fuente y rezago de publicación (`desfase_meses`). El no registrado vale 100 en el dato publicado en oct-2016, que mide may-2016: en `fact_valor` arranca en 110,08 | `serie_id` |
 | `fact_valor.csv` | El valor de cada serie en cada mes (formato largo), fechado en el mes que mide, y su `estado` de QA | `fecha` + `serie_id` |
 | `salario_real.csv` | Salario real por sector ya calculado (dic-2016 = 100) | `fecha` + `serie_id` |
 
@@ -23,7 +23,7 @@ Los CSV usan coma como separador, **punto como decimal** y UTF-8.
 1. **Inicio → Obtener datos → Texto/CSV** y elegir `dim_fecha.csv`. Tocar **Transformar datos** (no "Cargar").
 2. Repetir con los otros tres archivos. Quedan cuatro consultas en el Editor de Power Query.
 3. Tipos de datos. Si tu Windows está en español, el punto decimal se lee mal: en cada consulta, clic derecho en la columna `valor` (o `indice_real`, etc.) → **Cambiar tipo → Usar configuración regional…** → *Número decimal* con *Inglés (Estados Unidos)*. Así:
-   - `fecha` → **Fecha** (en las cuatro tablas).
+   - `fecha` → **Fecha** (en `dim_fecha`, `fact_valor` y `salario_real`).
    - `valor`, `indice_nominal`, `indice_real`, `var_real_interanual` → **Número decimal** (con configuración regional inglés).
    - `anio`, `mes`, `trimestre` → **Número entero**.
 4. **Cerrar y aplicar**.
@@ -93,7 +93,7 @@ Formato: las medidas `%` como **Porcentaje** con 1 decimal; las de canastas con 
 ## 5. Páginas sugeridas
 
 **Página 1 · Resumen**
-- Tres **tarjetas**: `Pérdida real vs. dic-2016 %` filtrada a cada sector (privado registrado, público, no registrado) en el último mes con datos (filtro de página: `dim_fecha[fecha]` = jul-2026).
+- Tres **tarjetas**: `Pérdida real vs. dic-2016 %` filtrada a cada sector (privado registrado, público, no registrado) en el último mes con datos (filtro de página: `dim_fecha[fecha]` = jul-2026; en la tarjeta del no registrado, filtro del objeto visual = feb-2026, porque se fecha en el mes que mide y termina antes).
 - **Gráfico de líneas**: eje X `dim_fecha[fecha]`, valores `Salario real`, leyenda `dim_serie[nombre]`, filtro `dim_serie[grupo] = salario_indice`. Agregar una **línea constante** en 100 (panel de análisis).
 
 **Página 2 · Inflación**
@@ -117,6 +117,7 @@ Con la foto de datos del 21/10/2026, estos números tienen que coincidir con el 
 |---|---|---|
 | `Salario real` | `sal_total`, jul-2026 | 78,21 |
 | `Salario real` | `sal_publico`, jul-2026 | 65,71 |
+| `Salario real` | `sal_no_registrado`, feb-2026 | 93,95 |
 | `Var. mensual %` | `ipc_nacional`, dic-2023 | 25,5 % |
 | `Canastas por RIPTE` | jul-2026 | 3,84 |
 

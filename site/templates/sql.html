@@ -24,7 +24,7 @@
     <div class="relacion" aria-hidden="true">N — 1</div>
     <div class="entidad">
       <p class="entidad__nombre">dim_serie</p>
-      <ul><li class="pk">serie_id</li><li>nombre</li><li>grupo</li><li>region</li><li>unidad</li><li>base</li><li>fuente</li></ul>
+      <ul><li class="pk">serie_id</li><li>nombre</li><li>grupo</li><li>region</li><li>unidad</li><li>base</li><li>fuente</li><li>desfase_meses</li></ul>
     </div>
   </div>
   <p class="nota">{{ d.meta.observaciones|numero }} filas en <code>fact_valor</code> ({{ d.meta.series }} series × meses, formato largo). <code>estado = 'sospechoso'</code> marca lo que la QA puso en cuarentena: se guarda pero las vistas no lo usan.</p>
