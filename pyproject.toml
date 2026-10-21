@@ -1,0 +1,31 @@
+[project]
+name = "inflationarg"
+version = "1.0.0"
+description = "¿Le ganaron los salarios a la inflación en Argentina? (2016–2026). Pipeline Python + SQLite + SQL con QA de datos, Excel, Power BI y sitio."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Juan Barros", email = "juanmbarrosf@gmail.com" }]
+dependencies = ["pandas>=2.1", "openpyxl>=3.1", "Jinja2>=3.1"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]
+
+[tool.setuptools]
+packages = ["inflationarg"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]  # textos en español con guiones y comillas tipográficas
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.coverage.run]
+source = ["inflationarg"]
+omit = ["inflationarg/__main__.py"]
