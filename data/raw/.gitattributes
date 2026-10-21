@@ -1,0 +1,2 @@
+# Los CSV oficiales se guardan byte a byte: el sha256 del MANIFEST.json tiene que coincidir en cualquier sistema.
+* -text

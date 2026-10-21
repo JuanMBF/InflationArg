@@ -1,0 +1,336 @@
+{
+  "fuente_api": "https://apis.datos.gob.ar/series/api/",
+  "descargado": "2026-10-21",
+  "series": [
+    {
+      "id": "148.3_INIVELNAL_DICI_M_26",
+      "descripcion": "IPC. Nivel General Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INUCLEONAL_DICI_M_19",
+      "descripcion": "IPC. Núcleo. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_IREGULANAL_DICI_M_22",
+      "descripcion": "IPC. Regulados Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_IESTACINAL_DICI_M_25",
+      "descripcion": "IPC. Estacionales. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IALIMENNAL_DICI_M_45",
+      "descripcion": "IPC. Alimentos y bebidas no alcohólicas. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IBEBIDANAL_DICI_M_39",
+      "descripcion": "IPC. Bebidas alcohólicas y tabaco. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IPRENDANAL_DICI_M_35",
+      "descripcion": "IPC. Prendas de vestir y calzado. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IVIVIENNAL_DICI_M_52",
+      "descripcion": "IPC. Vivienda, agua, electricidad, y otros combustibles. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IEQUIPANAL_DICI_M_46",
+      "descripcion": "IPC. Equipamiento y mantenimiento del hogar. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_ISALUDNAL_DICI_M_18",
+      "descripcion": "IPC. Salud. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_ITRANSPNAL_DICI_M_23",
+      "descripcion": "IPC. Transporte. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_ICOMUNINAL_DICI_M_27",
+      "descripcion": "IPC. Comunicaciones. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IRECREANAL_DICI_M_31",
+      "descripcion": "IPC. Recreación y cultura. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IEDUCACNAL_DICI_M_22",
+      "descripcion": "IPC. Educación. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IRESTAUNAL_DICI_M_33",
+      "descripcion": "IPC. Hoteles y restaurantes. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "146.3_IBIENESNAL_DICI_M_36",
+      "descripcion": "IPC. Bienes y servicios varios. Nacional. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por capítulos. Base diciembre 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.5/download/indice-precios-al-consumidor-apertura-por-capitulos-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INIVELGBA_DICI_M_21",
+      "descripcion": "IPC. Nivel General. GBA. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INIVELANA_DICI_M_26",
+      "descripcion": "IPC. Nivel General Región pampeana. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INIVELNOA_DICI_M_21",
+      "descripcion": "IPC. Nivel General Región noroeste. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INIVELNEA_DICI_M_21",
+      "descripcion": "IPC. Nivel General Región noreste. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INIVELUYO_DICI_M_22",
+      "descripcion": "IPC. Nivel General Cuyo. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "148.3_INIVELNIA_DICI_M_27",
+      "descripcion": "IPC. Nivel General Patagonia. Base dic 2016. Mensual.",
+      "unidades": "Índice",
+      "dataset": "Índice de Precios al Consumidor Nacional (IPC). Base diciembre 2016.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de Precios al Consumidor, por categorías y regiones. Base diciembre de 2016. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/145/distribution/145.9/download/indice-precios-al-consumidor-apertura-por-categorias-base-diciembre-2016-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "149.1_TL_INDIIOS_OCTU_0_21",
+      "descripcion": "Índice de Salarios",
+      "unidades": "Índice",
+      "dataset": "Índice de salarios. Base octubre 2016",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de salarios. Base octubre 2016.  Valores mensuales.",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/149/distribution/149.1/download/indice-salarios-periodicidad-mensual-base-octubre-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "149.1_TL_REGIADO_OCTU_0_16",
+      "descripcion": "Índice de Salarios. Empleo registrado.",
+      "unidades": "Índice",
+      "dataset": "Índice de salarios. Base octubre 2016",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de salarios. Base octubre 2016.  Valores mensuales.",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/149/distribution/149.1/download/indice-salarios-periodicidad-mensual-base-octubre-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "149.1_SOR_PRIADO_OCTU_0_25",
+      "descripcion": "Índice de Salarios. Empleo registrado. Sector privado.",
+      "unidades": "Índice",
+      "dataset": "Índice de salarios. Base octubre 2016",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de salarios. Base octubre 2016.  Valores mensuales.",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/149/distribution/149.1/download/indice-salarios-periodicidad-mensual-base-octubre-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "149.1_SOR_PUBICO_OCTU_0_14",
+      "descripcion": "Índice de Salarios. Empleo registrado. Sector público.",
+      "unidades": "Índice",
+      "dataset": "Índice de salarios. Base octubre 2016",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de salarios. Base octubre 2016.  Valores mensuales.",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/149/distribution/149.1/download/indice-salarios-periodicidad-mensual-base-octubre-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "149.1_SOR_PRIADO_OCTU_0_28",
+      "descripcion": "Índice de Salarios. Empleo no registrado. Sector privado.",
+      "unidades": "Índice",
+      "dataset": "Índice de salarios. Base octubre 2016",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Índice de salarios. Base octubre 2016.  Valores mensuales.",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/149/distribution/149.1/download/indice-salarios-periodicidad-mensual-base-octubre-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "158.1_REPTE_0_0_5",
+      "descripcion": "Remuneración imponible promedio de los trabajadores estables (RIPTE)",
+      "unidades": "Pesos corrientes",
+      "dataset": "Remuneración imponible promedio de los trabajadores estables (RIPTE)",
+      "fuente": "Secretaría de Trabajo, Empleo y Seguridad Social, Ministerio de Capital Humano",
+      "distribucion": "Remuneración imponible promedio de los trabajadores estables RIPTE. Total país en pesos. Serie mensual",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/158/distribution/158.1/download/remuneracion-imponible-promedio-trabajadores-estables-ripte-total-pais-pesos-serie-mensual.csv",
+      "actualizado": null
+    },
+    {
+      "id": "57.1_SMVMM_0_M_34",
+      "descripcion": "Salario mínimo, vital y móvil desde 1988. Mensual. Pesos corrientes.",
+      "unidades": "Pesos corrientes",
+      "dataset": "Salario mínimo, vital y móvil en pesos corrientes",
+      "fuente": "Secretaría de Trabajo, Empleo y Seguridad Social, Ministerio de Capital Humano",
+      "distribucion": "Índice de salario mínimo vital y movil. Pesos corrientes. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/57/distribution/57.1/download/indice-salario-minimo-vital-movil-valores-mensuales-pesos-corrientes-desde-1988.csv",
+      "actualizado": null
+    },
+    {
+      "id": "58.1_MP_0_M_13",
+      "descripcion": "Haber mínimo jubilatorio en pesos desde 1971",
+      "unidades": "Pesos corrientes",
+      "dataset": "Haber mínimo jubilatorio. Pesos corrientes",
+      "fuente": "Administración Nacional de la Seguridad Social (ANSES)",
+      "distribucion": "Haber mínimo jubilatorio. Pesos corrientes. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/58/distribution/58.1/download/haber-minimo-jubilatorio-pesos-corrientes-valores-mensuales-desde-1971.csv",
+      "actualizado": null
+    },
+    {
+      "id": "150.1_CSTA_BATAL_0_D_20",
+      "descripcion": "Canasta básica total desde 2016. Pesos corrientes.",
+      "unidades": "Pesos corrientes",
+      "dataset": "Valores de la Canasta Básica de Alimentos  y Canasta Básica Total.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Canasta Básica Alimentaria y Total por adulto equivalente desde 2016. Pesos corrientes. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/150/distribution/150.1/download/valores-canasta-basica-alimentos-canasta-basica-total-mensual-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "150.1_CSTA_BARIA_0_D_26",
+      "descripcion": "Canasta básica alimentaria desde 2016. Pesos corrientes.",
+      "unidades": "Pesos corrientes",
+      "dataset": "Valores de la Canasta Básica de Alimentos  y Canasta Básica Total.",
+      "fuente": "Instituto Nacional de Estadística y Censos (INDEC)",
+      "distribucion": "Canasta Básica Alimentaria y Total por adulto equivalente desde 2016. Pesos corrientes. Valores mensuales",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/150/distribution/150.1/download/valores-canasta-basica-alimentos-canasta-basica-total-mensual-2016.csv",
+      "actualizado": null
+    },
+    {
+      "id": "92.1_TCV_0_0_21",
+      "descripcion": "Tipo de cambio de valuación (peso por dólar)",
+      "unidades": "Pesos argentinos por dólar",
+      "dataset": "Reservas internacionales y pasivos del BCRA",
+      "fuente": "Banco Central de la República Argentina (BCRA)",
+      "distribucion": "Reservas internacionales y pasivos financieros del BCRA",
+      "download_url": "https://infra.datos.gob.ar/catalog/sspm/dataset/92/distribution/92.1/download/reservas-internacionales-pasivos-financieros-bcra.csv",
+      "actualizado": null
+    }
+  ]
+}
