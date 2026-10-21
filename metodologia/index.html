@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metodología y QA de datos · InflationArg</title>
+  <meta name="description" content="Fuentes, método de cálculo, chequeos automáticos de calidad de datos y anomalías encontradas.">
+  <meta name="author" content="Juan Barros">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://juanmbf.github.io/InflationArg/metodologia/">  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:site_name" content="InflationArg">
+  <meta property="og:title" content="Metodología y QA de datos">
+  <meta property="og:description" content="Fuentes, método de cálculo, chequeos automáticos de calidad de datos y anomalías encontradas.">
+  <meta property="og:url" content="https://juanmbf.github.io/InflationArg/metodologia/">
+  <meta property="og:image" content="https://juanmbf.github.io/InflationArg/static/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="¿Le ganaron los salarios a la inflación? Gráfico de salario real por sector, Argentina 2016–2026.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/InflationArg/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/InflationArg/static/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/InflationArg/static/css/estilos.css">
+  <script>
+    (function () {
+      document.documentElement.classList.add("js");
+      try {
+        var t = localStorage.getItem("tema");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="/InflationArg/static/js/tema.js" defer></script>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="cabecera">
+    <div class="contenedor cabecera__fila">
+      <a class="marca" href="/InflationArg/" aria-label="InflationArg, inicio">
+        <svg class="marca__logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <path d="M7 22 L13 15 L18 19 L25 10" fill="none" stroke="var(--fondo)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>InflationArg</span>
+      </a>
+      <button class="menu-boton" type="button" aria-expanded="false" aria-controls="navegacion">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="sr">Menú</span>
+      </button>
+      <nav id="navegacion" class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="/InflationArg/">Inicio</a></li>
+          <li><a href="/InflationArg/dashboard/">Dashboard</a></li>
+          <li><a href="/InflationArg/calculadora/">Calculadora</a></li>
+          <li><a href="/InflationArg/sql/">SQL</a></li>
+          <li><a href="/InflationArg/metodologia/" aria-current="page">Metodología y QA</a></li>
+          <li><a href="/InflationArg/sobre-mi/">Sobre mí</a></li>
+        </ul>
+      </nav>
+      <button class="tema-boton" type="button" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
+        <svg class="icono-sol" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="icono-luna" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">Metodología · QA de datos</p>
+    <h1>De dónde salen los números y cómo se controlan</h1>
+    <p class="bajada">Datos oficiales descargados el 21/10/2026 y verificados con 11 chequeos automáticos antes de entrar a la base.</p>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="qa-titulo">
+  <h2 id="qa-titulo">QA de datos</h2>
+  <div class="qa-resumen">
+    <p><span class="estado estado--ok">✓ 7 ok</span> <span class="estado estado--info">i 1 informativo</span> <span class="estado estado--alerta">! 3 alertas</span> <span class="estado estado--error">✕ 0 errores</span></p>
+    <p class="nota">Un <strong>error</strong> frena el pipeline. Una <strong>alerta</strong> es una anomalía real de los datos: se documenta y, si corresponde, el dato se aparta del análisis.</p>
+  </div>
+  <ul class="qa-lista">
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Integridad de archivos (sha256 y filas vs. manifiesto)</h3>
+        <p>Los 10 archivos coinciden byte a byte con el manifiesto.</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Unicidad de fecha + serie</h3>
+        <p>5.563 observaciones descargadas (la historia completa de cada serie, no solo la ventana de análisis), ninguna repetida.</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Fechas mensuales contiguas</h3>
+        <p>Todas las fechas son primero de mes y ninguna serie tiene meses salteados.</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Completitud del catálogo</h3>
+        <p>Las 33 series del catálogo tienen datos desde dic‑2016 o antes.</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Base 100 de los índices</h3>
+        <p>Los 27 índices valen 100 en su mes base (IPC dic‑2016, salarios oct‑2016).</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Rangos plausibles</h3>
+        <p>Todos los valores son positivos y ninguna variación mensual sale del rango plausible de su grupo.</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--alerta">
+      <span class="estado estado--alerta">! alerta</span>
+      <div>
+        <h3>Valores con fecha futura</h3>
+        <p>Salario mínimo, vital y móvil: 6 valores posteriores a oct‑2026 (ya fijados por resolución). Se excluyen del análisis.</p>
+        <details class="tabla-detalle">
+          <summary>Ver el detalle (1 fila)</summary>
+          <section class="tabla-scroll" tabindex="0" aria-label="Detalle: Valores con fecha futura">
+            <table>
+              <thead><tr><th scope="col">Serie</th><th scope="col">Meses</th><th scope="col">Desde</th><th scope="col">Hasta</th></tr></thead>
+              <tbody>
+<tr><td class="">Salario mínimo, vital y móvil</td><td class="num">6</td><td class="">nov‑2026</td><td class="">abr‑2027</td></tr>              </tbody>
+            </table>
+          </section>
+        </details>
+      </div>
+    </li>
+    <li class="qa-item qa-item--alerta">
+      <span class="estado estado--alerta">! alerta</span>
+      <div>
+        <h3>Valores repetidos sospechosos</h3>
+        <p>RIPTE de ago‑2026 repite exacto el valor de jun‑2026. Se carga con estado &#39;sospechoso&#39; y las vistas no lo usan.</p>
+        <details class="tabla-detalle">
+          <summary>Ver el detalle (1 fila)</summary>
+          <section class="tabla-scroll" tabindex="0" aria-label="Detalle: Valores repetidos sospechosos">
+            <table>
+              <thead><tr><th scope="col">Serie</th><th scope="col">Mes</th><th scope="col">Valor</th><th scope="col">Motivo</th></tr></thead>
+              <tbody>
+<tr><td class="">RIPTE</td><td class="">ago‑2026</td><td class="num">1.915.878,76</td><td class="">repite exacto el valor de jun‑2026</td></tr>              </tbody>
+            </table>
+          </section>
+        </details>
+      </div>
+    </li>
+    <li class="qa-item qa-item--alerta">
+      <span class="estado estado--alerta">! alerta</span>
+      <div>
+        <h3>Consistencia API vs. CSV</h3>
+        <p>11 diferencias entre la API y los CSV; la API devolvió vacías 4 series (IPC Noroeste, IPC recreación y cultura, IPC restaurantes y hoteles, RIPTE) que en el CSV están completas. El pipeline usa siempre los CSV de descarga.</p>
+        <details class="tabla-detalle">
+          <summary>Ver el detalle (11 filas)</summary>
+          <section class="tabla-scroll" tabindex="0" aria-label="Detalle: Consistencia API vs. CSV">
+            <table>
+              <thead><tr><th scope="col">Serie</th><th scope="col">Id. en la API</th><th scope="col">Problema</th><th scope="col">Meses</th></tr></thead>
+              <tbody>
+<tr><td class="">IPC Total país</td><td class="">148.3_INIVELNAL_DICI_M_26</td><td class="">valores distintos al CSV (peor: abr‑2019, API 212,96 vs. CSV 213,05)</td><td class="num">1</td></tr><tr><td class="">IPC GBA</td><td class="">148.3_INIVELGBA_DICI_M_21</td><td class="">valores distintos al CSV (peor: abr‑2019, API 212,35 vs. CSV 212,45)</td><td class="num">1</td></tr><tr><td class="">IPC Pampeana</td><td class="">148.3_INIVELANA_DICI_M_26</td><td class="">valores distintos al CSV (peor: abr‑2019, API 213,12 vs. CSV 213,05)</td><td class="num">1</td></tr><tr><td class="">IPC Noreste</td><td class="">148.3_INIVELNEA_DICI_M_21</td><td class="">API incompleta: devuelve 56 de 118 meses</td><td class="num">61</td></tr><tr><td class="">IPC Noreste</td><td class="">148.3_INIVELNEA_DICI_M_21</td><td class="">valores distintos al CSV (peor: jul‑2022, API 861,70 vs. CSV 887,96)</td><td class="num">1</td></tr><tr><td class="">IPC Noroeste</td><td class="">148.3_INIVELNOA_DICI_M_21</td><td class="">API vacía</td><td class="num">118</td></tr><tr><td class="">IPC Cuyo</td><td class="">148.3_INIVELUYO_DICI_M_22</td><td class="">valores distintos al CSV (peor: abr‑2019, API 216,32 vs. CSV 216,42)</td><td class="num">2</td></tr><tr><td class="">IPC Patagonia</td><td class="">148.3_INIVELNIA_DICI_M_27</td><td class="">valores distintos al CSV (peor: abr‑2019, API 212,95 vs. CSV 213,05)</td><td class="num">1</td></tr><tr><td class="">IPC recreación y cultura</td><td class="">146.3_IRECREANAL_DICI_M_31</td><td class="">API vacía</td><td class="num">118</td></tr><tr><td class="">IPC restaurantes y hoteles</td><td class="">146.3_IRESTAUNAL_DICI_M_33</td><td class="">API vacía</td><td class="num">118</td></tr><tr><td class="">RIPTE</td><td class="">158.1_REPTE_0_0_5</td><td class="">API vacía</td><td class="num">128</td></tr>              </tbody>
+            </table>
+          </section>
+        </details>
+      </div>
+    </li>
+    <li class="qa-item qa-item--ok">
+      <span class="estado estado--ok">✓ ok</span>
+      <div>
+        <h3>Frescura</h3>
+        <p>Todas las series están dentro del rezago habitual de publicación.</p>
+      </div>
+    </li>
+    <li class="qa-item qa-item--info">
+      <span class="estado estado--info">i info</span>
+      <div>
+        <h3>Alineación de series</h3>
+        <p>Las series terminan en meses distintos (feb‑2026 a oct‑2026): cada conclusión se calcula hasta el último mes en que están todas sus series. El índice «Salarios – privado no registrado» se publica con 5 meses de rezago: se fecha en el mes que mide, por eso termina antes.</p>
+        <details class="tabla-detalle">
+          <summary>Ver el detalle (5 filas)</summary>
+          <section class="tabla-scroll" tabindex="0" aria-label="Detalle: Alineación de series">
+            <table>
+              <thead><tr><th scope="col">Conclusión</th><th scope="col">Vale hasta</th></tr></thead>
+              <tbody>
+<tr><td class="">Salario real: total, registrados, privado y público</td><td class="">jul‑2026</td></tr><tr><td class="">Salario real: privado no registrado</td><td class="">feb‑2026</td></tr><tr><td class="">Inflación, rubros y regiones</td><td class="">sep‑2026</td></tr><tr><td class="">Poder de compra en canastas</td><td class="">jul‑2026</td></tr><tr><td class="">Salario en dólares</td><td class="">jul‑2026</td></tr>              </tbody>
+            </table>
+          </section>
+        </details>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="metodo-titulo">
+  <div class="tarjeta texto">
+    <h2 id="metodo-titulo">Método</h2>
+    <ul>
+      <li><strong>Salario real</strong> = índice de salarios del sector ÷ IPC nacional, llevados los dos a dic‑2016 = 100 (el IPC del INDEC arranca en esa base; el índice de salarios es base oct‑2016).</li>
+      <li><strong>Inflación</strong>: variación del IPC mensual (contra el mes anterior), interanual (contra el mismo mes del año anterior) y acumulada en el año (contra diciembre).</li>
+      <li><strong>Poder de compra</strong>: ingreso en pesos ÷ Canasta Básica Total de un adulto equivalente (GBA, INDEC).</li>
+      <li><strong>Salario en dólares</strong>: ingreso en pesos ÷ tipo de cambio oficial de valuación del BCRA (promedio mensual). No usa cotizaciones paralelas.</li>
+      <li><strong>Alineación</strong>: las series terminan en meses distintos; cada conclusión llega hasta el último mes en que están todas sus series.</li>
+    </ul>
+    <table class="tabla-simple">
+      <caption>Hasta cuándo vale cada conclusión</caption>
+      <thead><tr><th scope="col">Análisis</th><th scope="col">Vale hasta</th></tr></thead>
+      <tbody>
+<tr><td>Salario real: privado no registrado</td><td>feb‑2026</td></tr><tr><td>Poder de compra en canastas</td><td>jul‑2026</td></tr><tr><td>Salario en dólares</td><td>jul‑2026</td></tr><tr><td>Salario real: total, registrados, privado y público</td><td>jul‑2026</td></tr><tr><td>Inflación, rubros y regiones</td><td>sep‑2026</td></tr>      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="limites-titulo">
+  <div class="tarjeta texto">
+    <h2 id="limites-titulo">Límites que conviene saber</h2>
+    <ul>
+      <li>El índice del <strong>sector privado no registrado</strong> se publica con cinco meses de rezago (lo aclara el INDEC en cada informe): el dato del mes t refleja salarios del mes t−5. Acá se corre cinco meses antes de deflactar, por eso llega hasta feb‑2026. El índice <strong>total</strong> del INDEC incluye ese componente tal como se publica (pesa cerca del 20 %), así que su caída de comienzos de 2024 se ve algo exagerada.</li>
+      <li>El <strong>RIPTE</strong> y el <strong>salario mínimo</strong> son montos brutos (antes de los aportes personales, cerca del 17 %): en mano compran proporcionalmente menos canastas.</li>
+      <li>El <strong>haber mínimo jubilatorio</strong> no incluye el bono previsional que ANSES paga aparte por decreto (de $ 70.000 desde marzo de 2024), así que subestima lo que cobra quien percibe la mínima.</li>
+      <li>El <strong>RIPTE</strong> es el promedio de trabajadores estables registrados; no representa a quienes trabajan en negro.</li>
+      <li>La <strong>Canasta Básica Total</strong> se valoriza para GBA; en otras regiones el costo es distinto.</li>
+      <li>Los datos son los publicados a la fecha de descarga; el INDEC y otras fuentes pueden revisarlos. Por eso hay un chequeo que compara la API contra los CSV.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="fuentes-titulo">
+  <h2 id="fuentes-titulo">Fuentes y cobertura</h2>
+  <section class="tabla-scroll" tabindex="0" aria-label="Fuentes y cobertura de cada serie">
+    <table>
+      <thead><tr><th scope="col">Serie</th><th scope="col">Fuente</th><th scope="col">Desde</th><th scope="col">Hasta</th><th scope="col" class="num">Meses</th></tr></thead>
+      <tbody>
+        <tr><td>Alimentos y bebidas no alcohólicas</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Bebidas alcohólicas y tabaco</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Bienes y servicios varios</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Canasta Básica Alimentaria (adulto equivalente, GBA)</td><td>INDEC</td><td>oct‑2016</td><td>sep‑2026</td><td class="num">120</td></tr>
+        <tr><td>Canasta Básica Total (adulto equivalente, GBA)</td><td>INDEC</td><td>oct‑2016</td><td>sep‑2026</td><td class="num">120</td></tr>
+        <tr><td>Comunicación</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Educación</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Equipamiento y mantenimiento del hogar</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Haber mínimo jubilatorio</td><td>ANSES</td><td>oct‑2016</td><td>oct‑2026</td><td class="num">121</td></tr>
+        <tr><td>IPC estacionales</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – Cuyo</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – GBA</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – Noreste (NEA)</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – Noroeste (NOA)</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – Pampeana</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – Patagonia</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC nivel general – Total país</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC núcleo</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>IPC regulados</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Prendas de vestir y calzado</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Recreación y cultura</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Restaurantes y hoteles</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>RIPTE (remuneración promedio de trabajadores estables)</td><td>Secretaría de Seguridad Social</td><td>oct‑2016</td><td>jul‑2026</td><td class="num">118</td></tr>
+        <tr><td>Salario mínimo, vital y móvil</td><td>Consejo del Salario / MTEySS</td><td>oct‑2016</td><td>oct‑2026</td><td class="num">121</td></tr>
+        <tr><td>Salarios – privado no registrado</td><td>INDEC</td><td>oct‑2016</td><td>feb‑2026</td><td class="num">113</td></tr>
+        <tr><td>Salarios – privado registrado</td><td>INDEC</td><td>oct‑2016</td><td>jul‑2026</td><td class="num">118</td></tr>
+        <tr><td>Salarios – registrados</td><td>INDEC</td><td>oct‑2016</td><td>jul‑2026</td><td class="num">118</td></tr>
+        <tr><td>Salarios – sector público</td><td>INDEC</td><td>oct‑2016</td><td>jul‑2026</td><td class="num">118</td></tr>
+        <tr><td>Salarios – total</td><td>INDEC</td><td>oct‑2016</td><td>jul‑2026</td><td class="num">118</td></tr>
+        <tr><td>Salud</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Tipo de cambio oficial de valuación (BCRA, promedio mensual)</td><td>BCRA</td><td>oct‑2016</td><td>sep‑2026</td><td class="num">120</td></tr>
+        <tr><td>Transporte</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+        <tr><td>Vivienda, agua, electricidad y combustibles</td><td>INDEC</td><td>dic‑2016</td><td>sep‑2026</td><td class="num">118</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <p class="nota">Todas las series vienen de <a href="https://datos.gob.ar">datos.gob.ar</a> (licencia CC BY 4.0). El manifiesto con URL, sha256 y filas de cada archivo está en <a href="https://github.com/JuanMBF/InflationArg/blob/main/data/raw/MANIFEST.json">data/raw/MANIFEST.json</a>.</p>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="descargas-titulo">
+  <h2 id="descargas-titulo">Descargas</h2>
+  <ul class="descargas">
+    <li class="descarga"><a href="/InflationArg/descargas/inflationarg.xlsx" download>Excel</a><span>Una hoja por pregunta, tablas con formato y gráfico nativo.</span></li>
+    <li class="descarga"><a href="/InflationArg/descargas/powerbi.zip" download>Power BI</a><span>Modelo estrella en CSV listo para importar, con <a href="https://github.com/JuanMBF/InflationArg/blob/main/docs/power-bi.md">guía paso a paso</a>.</span></li>
+    <li class="descarga"><a href="/InflationArg/descargas/inflationarg.db" download>SQLite</a><span>La base completa con tablas y vistas.</span></li>
+    <li class="descarga"><a href="/InflationArg/descargas/dashboard.json" download>JSON</a><span>Los datos que alimentan este sitio.</span></li>
+  </ul>
+</section>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor pie__fila">
+      <div>
+        <p class="pie__titulo">InflationArg</p>
+        <p>Proyecto de portfolio de <a href="/InflationArg/sobre-mi/">Juan Barros</a>. Código <a href="https://github.com/JuanMBF/InflationArg">en GitHub</a> con licencia MIT.</p>
+      </div>
+      <div>
+        <p>Datos: INDEC, BCRA, ANSES y MTEySS vía <a href="https://datos.gob.ar">datos.gob.ar</a> (CC BY 4.0), descargados el 21/10/2026.</p>
+        <p>Sin cookies ni rastreadores.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

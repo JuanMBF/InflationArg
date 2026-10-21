@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora de ajuste salarial · InflationArg</title>
+  <meta name="description" content="¿Cuánto hay que ajustar un sueldo para no perder contra la inflación? Calculadora con IPC del INDEC.">
+  <meta name="author" content="Juan Barros">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://juanmbf.github.io/InflationArg/calculadora/">  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:site_name" content="InflationArg">
+  <meta property="og:title" content="Calculadora de ajuste salarial">
+  <meta property="og:description" content="¿Cuánto hay que ajustar un sueldo para no perder contra la inflación? Calculadora con IPC del INDEC.">
+  <meta property="og:url" content="https://juanmbf.github.io/InflationArg/calculadora/">
+  <meta property="og:image" content="https://juanmbf.github.io/InflationArg/static/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="¿Le ganaron los salarios a la inflación? Gráfico de salario real por sector, Argentina 2016–2026.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/InflationArg/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/InflationArg/static/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/InflationArg/static/css/estilos.css">
+  <script>
+    (function () {
+      document.documentElement.classList.add("js");
+      try {
+        var t = localStorage.getItem("tema");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="/InflationArg/static/js/tema.js" defer></script>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="cabecera">
+    <div class="contenedor cabecera__fila">
+      <a class="marca" href="/InflationArg/" aria-label="InflationArg, inicio">
+        <svg class="marca__logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <path d="M7 22 L13 15 L18 19 L25 10" fill="none" stroke="var(--fondo)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>InflationArg</span>
+      </a>
+      <button class="menu-boton" type="button" aria-expanded="false" aria-controls="navegacion">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="sr">Menú</span>
+      </button>
+      <nav id="navegacion" class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="/InflationArg/">Inicio</a></li>
+          <li><a href="/InflationArg/dashboard/">Dashboard</a></li>
+          <li><a href="/InflationArg/calculadora/" aria-current="page">Calculadora</a></li>
+          <li><a href="/InflationArg/sql/">SQL</a></li>
+          <li><a href="/InflationArg/metodologia/">Metodología y QA</a></li>
+          <li><a href="/InflationArg/sobre-mi/">Sobre mí</a></li>
+        </ul>
+      </nav>
+      <button class="tema-boton" type="button" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
+        <svg class="icono-sol" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="icono-luna" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">Herramienta para RR.HH. y liquidación de sueldos</p>
+    <h1>Calculadora de ajuste salarial</h1>
+    <p class="bajada">¿Cuánto tiene que cobrar hoy alguien para no perder contra la inflación? Ingresá un sueldo y el mes en que se cobraba: la calculadora lo actualiza por IPC y lo compara contra lo que aumentaron los salarios del sector.</p>
+  </div>
+</section>
+
+<div class="contenedor calculadora">
+  <form class="tarjeta formulario" id="form-calculadora" novalidate>
+    <h2>Datos del sueldo</h2>
+    <div class="campo">
+      <label for="sueldo">Sueldo de referencia (en pesos)</label>
+      <input type="text" id="sueldo" name="sueldo" inputmode="decimal" autocomplete="off" required placeholder="Ej.: 850.000" aria-describedby="ayuda-sueldo">
+      <p class="ayuda" id="ayuda-sueldo">Bruto o neto, pero siempre el mismo concepto.</p>
+    </div>
+    <div class="campo">
+      <label for="desde">Mes en que se cobraba</label>
+      <select id="desde" name="desde" required>
+        <option value="2026-09">sep‑2026</option>
+        <option value="2026-08">ago‑2026</option>
+        <option value="2026-07">jul‑2026</option>
+        <option value="2026-06">jun‑2026</option>
+        <option value="2026-05">may‑2026</option>
+        <option value="2026-04">abr‑2026</option>
+        <option value="2026-03">mar‑2026</option>
+        <option value="2026-02">feb‑2026</option>
+        <option value="2026-01">ene‑2026</option>
+        <option value="2025-12">dic‑2025</option>
+        <option value="2025-11">nov‑2025</option>
+        <option value="2025-10">oct‑2025</option>
+        <option value="2025-09" selected>sep‑2025</option>
+        <option value="2025-08">ago‑2025</option>
+        <option value="2025-07">jul‑2025</option>
+        <option value="2025-06">jun‑2025</option>
+        <option value="2025-05">may‑2025</option>
+        <option value="2025-04">abr‑2025</option>
+        <option value="2025-03">mar‑2025</option>
+        <option value="2025-02">feb‑2025</option>
+        <option value="2025-01">ene‑2025</option>
+        <option value="2024-12">dic‑2024</option>
+        <option value="2024-11">nov‑2024</option>
+        <option value="2024-10">oct‑2024</option>
+        <option value="2024-09">sep‑2024</option>
+        <option value="2024-08">ago‑2024</option>
+        <option value="2024-07">jul‑2024</option>
+        <option value="2024-06">jun‑2024</option>
+        <option value="2024-05">may‑2024</option>
+        <option value="2024-04">abr‑2024</option>
+        <option value="2024-03">mar‑2024</option>
+        <option value="2024-02">feb‑2024</option>
+        <option value="2024-01">ene‑2024</option>
+        <option value="2023-12">dic‑2023</option>
+        <option value="2023-11">nov‑2023</option>
+        <option value="2023-10">oct‑2023</option>
+        <option value="2023-09">sep‑2023</option>
+        <option value="2023-08">ago‑2023</option>
+        <option value="2023-07">jul‑2023</option>
+        <option value="2023-06">jun‑2023</option>
+        <option value="2023-05">may‑2023</option>
+        <option value="2023-04">abr‑2023</option>
+        <option value="2023-03">mar‑2023</option>
+        <option value="2023-02">feb‑2023</option>
+        <option value="2023-01">ene‑2023</option>
+        <option value="2022-12">dic‑2022</option>
+        <option value="2022-11">nov‑2022</option>
+        <option value="2022-10">oct‑2022</option>
+        <option value="2022-09">sep‑2022</option>
+        <option value="2022-08">ago‑2022</option>
+        <option value="2022-07">jul‑2022</option>
+        <option value="2022-06">jun‑2022</option>
+        <option value="2022-05">may‑2022</option>
+        <option value="2022-04">abr‑2022</option>
+        <option value="2022-03">mar‑2022</option>
+        <option value="2022-02">feb‑2022</option>
+        <option value="2022-01">ene‑2022</option>
+        <option value="2021-12">dic‑2021</option>
+        <option value="2021-11">nov‑2021</option>
+        <option value="2021-10">oct‑2021</option>
+        <option value="2021-09">sep‑2021</option>
+        <option value="2021-08">ago‑2021</option>
+        <option value="2021-07">jul‑2021</option>
+        <option value="2021-06">jun‑2021</option>
+        <option value="2021-05">may‑2021</option>
+        <option value="2021-04">abr‑2021</option>
+        <option value="2021-03">mar‑2021</option>
+        <option value="2021-02">feb‑2021</option>
+        <option value="2021-01">ene‑2021</option>
+        <option value="2020-12">dic‑2020</option>
+        <option value="2020-11">nov‑2020</option>
+        <option value="2020-10">oct‑2020</option>
+        <option value="2020-09">sep‑2020</option>
+        <option value="2020-08">ago‑2020</option>
+        <option value="2020-07">jul‑2020</option>
+        <option value="2020-06">jun‑2020</option>
+        <option value="2020-05">may‑2020</option>
+        <option value="2020-04">abr‑2020</option>
+        <option value="2020-03">mar‑2020</option>
+        <option value="2020-02">feb‑2020</option>
+        <option value="2020-01">ene‑2020</option>
+        <option value="2019-12">dic‑2019</option>
+        <option value="2019-11">nov‑2019</option>
+        <option value="2019-10">oct‑2019</option>
+        <option value="2019-09">sep‑2019</option>
+        <option value="2019-08">ago‑2019</option>
+        <option value="2019-07">jul‑2019</option>
+        <option value="2019-06">jun‑2019</option>
+        <option value="2019-05">may‑2019</option>
+        <option value="2019-04">abr‑2019</option>
+        <option value="2019-03">mar‑2019</option>
+        <option value="2019-02">feb‑2019</option>
+        <option value="2019-01">ene‑2019</option>
+        <option value="2018-12">dic‑2018</option>
+        <option value="2018-11">nov‑2018</option>
+        <option value="2018-10">oct‑2018</option>
+        <option value="2018-09">sep‑2018</option>
+        <option value="2018-08">ago‑2018</option>
+        <option value="2018-07">jul‑2018</option>
+        <option value="2018-06">jun‑2018</option>
+        <option value="2018-05">may‑2018</option>
+        <option value="2018-04">abr‑2018</option>
+        <option value="2018-03">mar‑2018</option>
+        <option value="2018-02">feb‑2018</option>
+        <option value="2018-01">ene‑2018</option>
+        <option value="2017-12">dic‑2017</option>
+        <option value="2017-11">nov‑2017</option>
+        <option value="2017-10">oct‑2017</option>
+        <option value="2017-09">sep‑2017</option>
+        <option value="2017-08">ago‑2017</option>
+        <option value="2017-07">jul‑2017</option>
+        <option value="2017-06">jun‑2017</option>
+        <option value="2017-05">may‑2017</option>
+        <option value="2017-04">abr‑2017</option>
+        <option value="2017-03">mar‑2017</option>
+        <option value="2017-02">feb‑2017</option>
+        <option value="2017-01">ene‑2017</option>
+        <option value="2016-12">dic‑2016</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="hasta">Actualizar hasta</label>
+      <select id="hasta" name="hasta" required>
+        <option value="2026-09" selected>sep‑2026 (último IPC)</option>
+        <option value="2026-08">ago‑2026</option>
+        <option value="2026-07">jul‑2026</option>
+        <option value="2026-06">jun‑2026</option>
+        <option value="2026-05">may‑2026</option>
+        <option value="2026-04">abr‑2026</option>
+        <option value="2026-03">mar‑2026</option>
+        <option value="2026-02">feb‑2026</option>
+        <option value="2026-01">ene‑2026</option>
+        <option value="2025-12">dic‑2025</option>
+        <option value="2025-11">nov‑2025</option>
+        <option value="2025-10">oct‑2025</option>
+        <option value="2025-09">sep‑2025</option>
+        <option value="2025-08">ago‑2025</option>
+        <option value="2025-07">jul‑2025</option>
+        <option value="2025-06">jun‑2025</option>
+        <option value="2025-05">may‑2025</option>
+        <option value="2025-04">abr‑2025</option>
+        <option value="2025-03">mar‑2025</option>
+        <option value="2025-02">feb‑2025</option>
+        <option value="2025-01">ene‑2025</option>
+        <option value="2024-12">dic‑2024</option>
+        <option value="2024-11">nov‑2024</option>
+        <option value="2024-10">oct‑2024</option>
+        <option value="2024-09">sep‑2024</option>
+        <option value="2024-08">ago‑2024</option>
+        <option value="2024-07">jul‑2024</option>
+        <option value="2024-06">jun‑2024</option>
+        <option value="2024-05">may‑2024</option>
+        <option value="2024-04">abr‑2024</option>
+        <option value="2024-03">mar‑2024</option>
+        <option value="2024-02">feb‑2024</option>
+        <option value="2024-01">ene‑2024</option>
+        <option value="2023-12">dic‑2023</option>
+        <option value="2023-11">nov‑2023</option>
+        <option value="2023-10">oct‑2023</option>
+        <option value="2023-09">sep‑2023</option>
+        <option value="2023-08">ago‑2023</option>
+        <option value="2023-07">jul‑2023</option>
+        <option value="2023-06">jun‑2023</option>
+        <option value="2023-05">may‑2023</option>
+        <option value="2023-04">abr‑2023</option>
+        <option value="2023-03">mar‑2023</option>
+        <option value="2023-02">feb‑2023</option>
+        <option value="2023-01">ene‑2023</option>
+        <option value="2022-12">dic‑2022</option>
+        <option value="2022-11">nov‑2022</option>
+        <option value="2022-10">oct‑2022</option>
+        <option value="2022-09">sep‑2022</option>
+        <option value="2022-08">ago‑2022</option>
+        <option value="2022-07">jul‑2022</option>
+        <option value="2022-06">jun‑2022</option>
+        <option value="2022-05">may‑2022</option>
+        <option value="2022-04">abr‑2022</option>
+        <option value="2022-03">mar‑2022</option>
+        <option value="2022-02">feb‑2022</option>
+        <option value="2022-01">ene‑2022</option>
+        <option value="2021-12">dic‑2021</option>
+        <option value="2021-11">nov‑2021</option>
+        <option value="2021-10">oct‑2021</option>
+        <option value="2021-09">sep‑2021</option>
+        <option value="2021-08">ago‑2021</option>
+        <option value="2021-07">jul‑2021</option>
+        <option value="2021-06">jun‑2021</option>
+        <option value="2021-05">may‑2021</option>
+        <option value="2021-04">abr‑2021</option>
+        <option value="2021-03">mar‑2021</option>
+        <option value="2021-02">feb‑2021</option>
+        <option value="2021-01">ene‑2021</option>
+        <option value="2020-12">dic‑2020</option>
+        <option value="2020-11">nov‑2020</option>
+        <option value="2020-10">oct‑2020</option>
+        <option value="2020-09">sep‑2020</option>
+        <option value="2020-08">ago‑2020</option>
+        <option value="2020-07">jul‑2020</option>
+        <option value="2020-06">jun‑2020</option>
+        <option value="2020-05">may‑2020</option>
+        <option value="2020-04">abr‑2020</option>
+        <option value="2020-03">mar‑2020</option>
+        <option value="2020-02">feb‑2020</option>
+        <option value="2020-01">ene‑2020</option>
+        <option value="2019-12">dic‑2019</option>
+        <option value="2019-11">nov‑2019</option>
+        <option value="2019-10">oct‑2019</option>
+        <option value="2019-09">sep‑2019</option>
+        <option value="2019-08">ago‑2019</option>
+        <option value="2019-07">jul‑2019</option>
+        <option value="2019-06">jun‑2019</option>
+        <option value="2019-05">may‑2019</option>
+        <option value="2019-04">abr‑2019</option>
+        <option value="2019-03">mar‑2019</option>
+        <option value="2019-02">feb‑2019</option>
+        <option value="2019-01">ene‑2019</option>
+        <option value="2018-12">dic‑2018</option>
+        <option value="2018-11">nov‑2018</option>
+        <option value="2018-10">oct‑2018</option>
+        <option value="2018-09">sep‑2018</option>
+        <option value="2018-08">ago‑2018</option>
+        <option value="2018-07">jul‑2018</option>
+        <option value="2018-06">jun‑2018</option>
+        <option value="2018-05">may‑2018</option>
+        <option value="2018-04">abr‑2018</option>
+        <option value="2018-03">mar‑2018</option>
+        <option value="2018-02">feb‑2018</option>
+        <option value="2018-01">ene‑2018</option>
+        <option value="2017-12">dic‑2017</option>
+        <option value="2017-11">nov‑2017</option>
+        <option value="2017-10">oct‑2017</option>
+        <option value="2017-09">sep‑2017</option>
+        <option value="2017-08">ago‑2017</option>
+        <option value="2017-07">jul‑2017</option>
+        <option value="2017-06">jun‑2017</option>
+        <option value="2017-05">may‑2017</option>
+        <option value="2017-04">abr‑2017</option>
+        <option value="2017-03">mar‑2017</option>
+        <option value="2017-02">feb‑2017</option>
+        <option value="2017-01">ene‑2017</option>
+        <option value="2016-12">dic‑2016</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="sector">Comparar con los salarios del sector</label>
+      <select id="sector" name="sector">
+        <option value="sal_privado" selected>Privado registrado</option>
+        <option value="sal_publico">Público</option>
+        <option value="sal_no_registrado">Privado no registrado</option>
+        <option value="sal_total">Total</option>
+        <option value="">No comparar</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="actual">Sueldo actual <span class="opcional">(opcional)</span></label>
+      <input type="text" id="actual" name="actual" inputmode="decimal" autocomplete="off" placeholder="Ej.: 1.200.000" aria-describedby="ayuda-actual">
+      <p class="ayuda" id="ayuda-actual">Si lo completás, te dice cuánto se ganó o perdió contra la inflación.</p>
+    </div>
+    <p class="error" id="error" role="alert" hidden></p>
+    <button class="boton boton--primario" type="submit">Calcular</button>
+  </form>
+
+  <section class="tarjeta resultado" id="resultado" aria-live="polite" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">Resultado</h2>
+    <div id="resultado-cuerpo">
+      <p class="nota">Completá el sueldo y tocá <strong>Calcular</strong>.</p>
+    </div>
+  </section>
+</div>
+
+<section class="contenedor seccion">
+  <div class="tarjeta texto">
+    <h2>Cómo calcula</h2>
+    <ul>
+      <li><strong>Sueldo equivalente</strong> = sueldo × IPC del mes final ÷ IPC del mes inicial (IPC nacional del INDEC, base dic‑2016).</li>
+      <li><strong>Aumento del sector</strong> = variación del índice de salarios del INDEC en el mismo período. Como los salarios se publican con más rezago, si no hay dato para el mes final se usa el último disponible del sector (jul‑2026; feb‑2026 para el privado no registrado, que el INDEC publica con cinco meses de rezago) y se compara contra la inflación de ese mismo período.</li>
+      <li><strong>Resultado real</strong> = (1 + aumento) ÷ (1 + inflación) − 1. Positivo: le ganó a la inflación.</li>
+      <li>La lógica está escrita dos veces, en <a href="https://github.com/JuanMBF/InflationArg/blob/main/inflationarg/calculadora.py">Python</a> y en <a href="https://github.com/JuanMBF/InflationArg/blob/main/site/static/js/calculadora.js">JavaScript</a>, y las dos pasan <a href="https://github.com/JuanMBF/InflationArg/blob/main/tests/casos_calculadora.json">los mismos casos de prueba</a>.</li>
+    </ul>
+    <p class="nota">Es una referencia estadística: no reemplaza lo que fije cada convenio colectivo.</p>
+  </div>
+</section>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor pie__fila">
+      <div>
+        <p class="pie__titulo">InflationArg</p>
+        <p>Proyecto de portfolio de <a href="/InflationArg/sobre-mi/">Juan Barros</a>. Código <a href="https://github.com/JuanMBF/InflationArg">en GitHub</a> con licencia MIT.</p>
+      </div>
+      <div>
+        <p>Datos: INDEC, BCRA, ANSES y MTEySS vía <a href="https://datos.gob.ar">datos.gob.ar</a> (CC BY 4.0), descargados el 21/10/2026.</p>
+        <p>Sin cookies ni rastreadores.</p>
+      </div>
+    </div>
+  </footer>
+<script type="application/json" id="datos-indices">{"ipc":{"2016-12":100.0,"2017-01":101.5859,"2017-02":103.6859,"2017-03":106.1476,"2017-04":108.9667,"2017-05":110.5301,"2017-06":111.8477,"2017-07":113.7852,"2017-08":115.3819,"2017-09":117.5719,"2017-10":119.3528,"2017-11":120.994,"2017-12":124.7956,"2018-01":126.9887,"2018-02":130.0606,"2018-03":133.1054,"2018-04":136.7512,"2018-05":139.5893,"2018-06":144.8053,"2018-07":149.2966,"2018-08":155.1034,"2018-09":165.2383,"2018-10":174.1473,"2018-11":179.6388,"2018-12":184.2552,"2019-01":189.6101,"2019-02":196.7501,"2019-03":205.9571,"2019-04":213.0517,"2019-05":219.5691,"2019-06":225.537,"2019-07":230.494,"2019-08":239.6077,"2019-09":253.7102,"2019-10":262.0661,"2019-11":273.2158,"2019-12":283.4442,"2020-01":289.8299,"2020-02":295.666,"2020-03":305.5515,"2020-04":310.1243,"2020-05":314.9087,"2020-06":321.9738,"2020-07":328.2014,"2020-08":337.0632,"2020-09":346.6207,"2020-10":359.657,"2020-11":371.0211,"2020-12":385.8826,"2021-01":401.5071,"2021-02":415.8595,"2021-03":435.8657,"2021-04":453.6503,"2021-05":468.725,"2021-06":483.6049,"2021-07":498.0987,"2021-08":510.3942,"2021-09":528.4968,"2021-10":547.0802,"2021-11":560.9184,"2021-12":582.4575,"2022-01":605.0317,"2022-02":633.4341,"2022-03":676.0566,"2022-04":716.9399,"2022-05":753.147,"2022-06":793.0278,"2022-07":851.761,"2022-08":911.1316,"2022-09":967.3076,"2022-10":1028.706,"2022-11":1079.2787,"2022-12":1134.5875,"2023-01":1202.979,"2023-02":1282.7091,"2023-03":1381.1601,"2023-04":1497.2147,"2023-05":1613.5895,"2023-06":1709.6115,"2023-07":1818.0838,"2023-08":2044.2832,"2023-09":2304.9242,"2023-10":2496.273,"2023-11":2816.0628,"2023-12":3533.1922,"2024-01":4261.5324,"2024-02":4825.7881,"2024-03":5357.0929,"2024-04":5830.2271,"2024-05":6073.7165,"2024-06":6351.7145,"2024-07":6607.7479,"2024-08":6883.4412,"2024-09":7122.2421,"2024-10":7313.9542,"2024-11":7491.4314,"2024-12":7694.0075,"2025-01":7864.1257,"2025-02":8052.9927,"2025-03":8353.3158,"2025-04":8585.6078,"2025-05":8714.4871,"2025-06":8855.5681,"2025-07":9023.973,"2025-08":9193.2441,"2025-09":9384.0922,"2025-10":9603.8623,"2025-11":9841.3581,"2025-12":10121.3715,"2026-01":10413.0309,"2026-02":10714.6255,"2026-03":11077.0608,"2026-04":11363.0904,"2026-05":11607.3937,"2026-06":11826.4103,"2026-07":12076.3937,"2026-08":12276.766,"2026-09":12514.1508},"salarios":{"sal_total":{"2016-10":100.0,"2016-11":101.41,"2016-12":102.79,"2017-01":104.38,"2017-02":105.76,"2017-03":108.82,"2017-04":112.63,"2017-05":114.43,"2017-06":116.45,"2017-07":121.1,"2017-08":123.95,"2017-09":125.71,"2017-10":127.62,"2017-11":129.61,"2017-12":131.03,"2018-01":132.48,"2018-02":133.59,"2018-03":136.14,"2018-04":139.81,"2018-05":141.93,"2018-06":143.14,"2018-07":146.9,"2018-08":151.05,"2018-09":155.44,"2018-10":161.12,"2018-11":165.83,"2018-12":169.94,"2019-01":175.19,"2019-02":179.84,"2019-03":186.94,"2019-04":191.11,"2019-05":196.51,"2019-06":200.44,"2019-07":209.9,"2019-08":215.02,"2019-09":220.77,"2019-10":227.92,"2019-11":233.32,"2019-12":239.44,"2020-01":253.78,"2020-02":263.55,"2020-03":271.58,"2020-04":272.03,"2020-05":271.84,"2020-06":273.47,"2020-07":278.37,"2020-08":283.92,"2020-09":291.02,"2020-10":302.94,"2020-11":312.92,"2020-12":318.42,"2021-01":328.84,"2021-02":343.06,"2021-03":360.28,"2021-04":371.84,"2021-05":382.42,"2021-06":391.16,"2021-07":410.37,"2021-08":423.41,"2021-09":440.34,"2021-10":458.07,"2021-11":476.11,"2021-12":488.33,"2022-01":506.68,"2022-02":522.56,"2022-03":561.16,"2022-04":589.01,"2022-05":625.63,"2022-06":655.94,"2022-07":692.32,"2022-08":737.46,"2022-09":787.08,"2022-10":827.54,"2022-11":883.06,"2022-12":929.56,"2023-01":973.35,"2023-02":1031.74,"2023-03":1136.04,"2023-04":1200.49,"2023-05":1290.46,"2023-06":1368.71,"2023-07":1519.5,"2023-08":1635.33,"2023-09":1826.29,"2023-10":1978.41,"2023-11":2157.73,"2023-12":2348.79,"2024-01":2734.97,"2024-02":3099.2,"2024-03":3417.34,"2024-04":3764.21,"2024-05":4077.32,"2024-06":4329.8,"2024-07":4653.26,"2024-08":4916.19,"2024-09":5147.61,"2024-10":5383.96,"2024-11":5591.0,"2024-12":5765.54,"2025-01":5934.47,"2025-02":6161.52,"2025-03":6344.81,"2025-04":6559.31,"2025-05":6755.22,"2025-06":6956.46,"2025-07":7129.22,"2025-08":7354.44,"2025-09":7518.03,"2025-10":7705.88,"2025-11":7843.14,"2025-12":7969.6,"2026-01":8171.66,"2026-02":8370.04,"2026-03":8654.99,"2026-04":8978.1,"2026-05":9177.39,"2026-06":9442.5,"2026-07":9708.64},"sal_privado":{"2016-10":100.0,"2016-11":101.8,"2016-12":102.89,"2017-01":106.34,"2017-02":107.69,"2017-03":109.26,"2017-04":112.93,"2017-05":115.18,"2017-06":117.23,"2017-07":122.8,"2017-08":124.55,"2017-09":126.0,"2017-10":128.23,"2017-11":130.04,"2017-12":131.01,"2018-01":133.25,"2018-02":134.31,"2018-03":136.23,"2018-04":141.01,"2018-05":144.47,"2018-06":146.47,"2018-07":149.94,"2018-08":154.2,"2018-09":157.82,"2018-10":163.86,"2018-11":168.06,"2018-12":170.85,"2019-01":176.91,"2019-02":181.76,"2019-03":188.26,"2019-04":193.47,"2019-05":201.66,"2019-06":206.99,"2019-07":215.86,"2019-08":221.87,"2019-09":227.72,"2019-10":236.31,"2019-11":242.85,"2019-12":246.54,"2020-01":267.6,"2020-02":279.97,"2020-03":286.4,"2020-04":285.74,"2020-05":285.06,"2020-06":285.44,"2020-07":289.19,"2020-08":295.13,"2020-09":301.54,"2020-10":317.66,"2020-11":326.04,"2020-12":331.26,"2021-01":344.61,"2021-02":362.33,"2021-03":376.68,"2021-04":394.54,"2021-05":408.38,"2021-06":415.55,"2021-07":437.0,"2021-08":451.64,"2021-09":467.91,"2021-10":485.29,"2021-11":507.0,"2021-12":514.34,"2022-01":538.17,"2022-02":559.01,"2022-03":589.31,"2022-04":622.29,"2022-05":665.66,"2022-06":699.36,"2022-07":737.01,"2022-08":797.04,"2022-09":843.4,"2022-10":888.1,"2022-11":953.34,"2022-12":996.62,"2023-01":1042.37,"2023-02":1114.31,"2023-03":1202.08,"2023-04":1284.57,"2023-05":1389.24,"2023-06":1468.48,"2023-07":1626.81,"2023-08":1762.46,"2023-09":1995.58,"2023-10":2169.81,"2023-11":2385.55,"2023-12":2648.87,"2024-01":3178.28,"2024-02":3625.42,"2024-03":3987.49,"2024-04":4464.6,"2024-05":4807.34,"2024-06":5129.04,"2024-07":5450.78,"2024-08":5725.38,"2024-09":5941.03,"2024-10":6175.77,"2024-11":6378.33,"2024-12":6556.47,"2025-01":6707.3,"2025-02":6862.13,"2025-03":7010.54,"2025-04":7187.95,"2025-05":7329.99,"2025-06":7457.02,"2025-07":7619.01,"2025-08":7789.94,"2025-09":7896.9,"2025-10":8061.11,"2025-11":8232.68,"2025-12":8441.0,"2026-01":8620.98,"2026-02":8755.26,"2026-03":8935.48,"2026-04":9292.93,"2026-05":9478.84,"2026-06":9662.32,"2026-07":9879.87},"sal_publico":{"2016-10":100.0,"2016-11":101.22,"2016-12":102.37,"2017-01":102.68,"2017-02":103.08,"2017-03":107.24,"2017-04":110.81,"2017-05":112.28,"2017-06":115.3,"2017-07":118.49,"2017-08":121.54,"2017-09":123.89,"2017-10":126.03,"2017-11":127.32,"2017-12":127.94,"2018-01":128.45,"2018-02":129.32,"2018-03":132.97,"2018-04":135.01,"2018-05":137.16,"2018-06":138.97,"2018-07":143.01,"2018-08":147.26,"2018-09":152.41,"2018-10":159.53,"2018-11":162.69,"2018-12":166.66,"2019-01":170.98,"2019-02":175.37,"2019-03":184.99,"2019-04":188.65,"2019-05":193.23,"2019-06":197.23,"2019-07":209.52,"2019-08":213.21,"2019-09":220.8,"2019-10":227.45,"2019-11":231.39,"2019-12":238.13,"2020-01":244.59,"2020-02":251.57,"2020-03":262.08,"2020-04":263.54,"2020-05":264.92,"2020-06":267.19,"2020-07":270.14,"2020-08":272.2,"2020-09":280.93,"2020-10":289.72,"2020-11":294.87,"2020-12":301.97,"2021-01":309.32,"2021-02":321.14,"2021-03":345.37,"2021-04":350.74,"2021-05":360.83,"2021-06":375.32,"2021-07":397.93,"2021-08":410.82,"2021-09":438.07,"2021-10":454.12,"2021-11":466.54,"2021-12":479.05,"2022-01":493.03,"2022-02":504.7,"2022-03":565.82,"2022-04":580.87,"2022-05":619.44,"2022-06":647.9,"2022-07":695.34,"2022-08":724.84,"2022-09":780.81,"2022-10":827.5,"2022-11":874.76,"2022-12":955.04,"2023-01":992.3,"2023-02":1030.47,"2023-03":1198.55,"2023-04":1247.39,"2023-05":1353.08,"2023-06":1434.49,"2023-07":1625.51,"2023-08":1723.25,"2023-09":1911.97,"2023-10":2086.82,"2023-11":2250.34,"2023-12":2374.02,"2024-01":2660.85,"2024-02":3062.83,"2024-03":3400.49,"2024-04":3656.07,"2024-05":3957.89,"2024-06":4113.99,"2024-07":4390.43,"2024-08":4594.73,"2024-09":4774.83,"2024-10":4982.02,"2024-11":5117.7,"2024-12":5205.72,"2025-01":5253.88,"2025-02":5488.58,"2025-03":5668.51,"2025-04":5797.13,"2025-05":5987.03,"2025-06":6063.83,"2025-07":6202.12,"2025-08":6375.31,"2025-09":6447.94,"2025-10":6569.76,"2025-11":6645.32,"2025-12":6710.79,"2026-01":6832.27,"2026-02":6991.42,"2026-03":7344.33,"2026-04":7515.45,"2026-05":7628.25,"2026-06":7889.42,"2026-07":8123.88},"sal_no_registrado":{"2016-10":110.08,"2016-11":114.61,"2016-12":115.79,"2017-01":116.24,"2017-02":120.74,"2017-03":126.06,"2017-04":127.7,"2017-05":128.5,"2017-06":131.95,"2017-07":135.71,"2017-08":136.57,"2017-09":138.19,"2017-10":140.7,"2017-11":144.0,"2017-12":142.73,"2018-01":141.02,"2018-02":145.09,"2018-03":148.81,"2018-04":154.02,"2018-05":156.63,"2018-06":164.93,"2018-07":172.61,"2018-08":177.16,"2018-09":181.72,"2018-10":186.59,"2018-11":188.85,"2018-12":188.44,"2019-01":188.78,"2019-02":195.49,"2019-03":200.52,"2019-04":203.25,"2019-05":207.5,"2019-06":212.21,"2019-07":223.54,"2019-08":232.76,"2019-09":240.22,"2019-10":248.53,"2019-11":250.23,"2019-12":248.98,"2020-01":252.74,"2020-02":263.49,"2020-03":273.32,"2020-04":279.69,"2020-05":285.74,"2020-06":306.96,"2020-07":310.78,"2020-08":318.42,"2020-09":327.43,"2020-10":341.36,"2020-11":346.34,"2020-12":349.47,"2021-01":353.54,"2021-02":362.03,"2021-03":371.24,"2021-04":374.34,"2021-05":395.51,"2021-06":412.7,"2021-07":436.8,"2021-08":447.94,"2021-09":457.61,"2021-10":483.35,"2021-11":517.48,"2021-12":534.17,"2022-01":558.71,"2022-02":575.31,"2022-03":606.44,"2022-04":654.74,"2022-05":675.21,"2022-06":718.67,"2022-07":722.55,"2022-08":771.21,"2022-09":825.87,"2022-10":876.04,"2022-11":918.51,"2022-12":947.84,"2023-01":1018.88,"2023-02":1090.31,"2023-03":1183.42,"2023-04":1271.63,"2023-05":1334.03,"2023-06":1445.34,"2023-07":1555.65,"2023-08":1730.47,"2023-09":1829.42,"2023-10":2007.72,"2023-11":2163.76,"2023-12":2419.24,"2024-01":2642.13,"2024-02":3040.48,"2024-03":3362.05,"2024-04":3710.18,"2024-05":3994.36,"2024-06":4319.74,"2024-07":4615.04,"2024-08":5010.83,"2024-09":5408.11,"2024-10":5684.22,"2024-11":6121.0,"2024-12":6461.52,"2025-01":7036.25,"2025-02":7287.87,"2025-03":7727.8,"2025-04":8170.41,"2025-05":8516.86,"2025-06":8660.37,"2025-07":8672.31,"2025-08":9050.9,"2025-09":9469.49,"2025-10":9916.02,"2025-11":10380.8,"2025-12":10743.56,"2026-01":11220.02,"2026-02":11656.04}}}</script>
+<script type="application/json" id="datos-sectores">{"sal_no_registrado": "Privado no registrado", "sal_privado": "Privado registrado", "sal_publico": "P\u00fablico", "sal_total": "Total"}</script>
+<script type="module" src="/InflationArg/static/js/calculadora-ui.js"></script>
+</body>
+</html>

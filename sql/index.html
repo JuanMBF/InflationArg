@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modelo de datos y consultas SQL · InflationArg</title>
+  <meta name="description" content="Modelo estrella en SQLite, vistas con window functions y una consulta por pregunta de negocio.">
+  <meta name="author" content="Juan Barros">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://juanmbf.github.io/InflationArg/sql/">  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:site_name" content="InflationArg">
+  <meta property="og:title" content="Modelo de datos y consultas SQL">
+  <meta property="og:description" content="Modelo estrella en SQLite, vistas con window functions y una consulta por pregunta de negocio.">
+  <meta property="og:url" content="https://juanmbf.github.io/InflationArg/sql/">
+  <meta property="og:image" content="https://juanmbf.github.io/InflationArg/static/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="¿Le ganaron los salarios a la inflación? Gráfico de salario real por sector, Argentina 2016–2026.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/InflationArg/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/InflationArg/static/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/InflationArg/static/css/estilos.css">
+  <script>
+    (function () {
+      document.documentElement.classList.add("js");
+      try {
+        var t = localStorage.getItem("tema");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="/InflationArg/static/js/tema.js" defer></script>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="cabecera">
+    <div class="contenedor cabecera__fila">
+      <a class="marca" href="/InflationArg/" aria-label="InflationArg, inicio">
+        <svg class="marca__logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <path d="M7 22 L13 15 L18 19 L25 10" fill="none" stroke="var(--fondo)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>InflationArg</span>
+      </a>
+      <button class="menu-boton" type="button" aria-expanded="false" aria-controls="navegacion">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="sr">Menú</span>
+      </button>
+      <nav id="navegacion" class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="/InflationArg/">Inicio</a></li>
+          <li><a href="/InflationArg/dashboard/">Dashboard</a></li>
+          <li><a href="/InflationArg/calculadora/">Calculadora</a></li>
+          <li><a href="/InflationArg/sql/" aria-current="page">SQL</a></li>
+          <li><a href="/InflationArg/metodologia/">Metodología y QA</a></li>
+          <li><a href="/InflationArg/sobre-mi/">Sobre mí</a></li>
+        </ul>
+      </nav>
+      <button class="tema-boton" type="button" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
+        <svg class="icono-sol" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="icono-luna" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">SQL · SQLite</p>
+    <h1>Modelo de datos y consultas</h1>
+    <p class="bajada">Los CSV oficiales se cargan en una base SQLite con un modelo estrella. Encima hay vistas con CTEs y window functions, y una consulta por cada pregunta de negocio. Todo lo que muestra el sitio sale de estas consultas.</p>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="modelo-titulo">
+  <h2 id="modelo-titulo">Modelo estrella</h2>
+  <div class="modelo" role="img" aria-label="Diagrama del modelo: fact_valor en el centro, relacionada con dim_fecha por fecha y con dim_serie por serie_id.">
+    <div class="entidad">
+      <p class="entidad__nombre">dim_fecha</p>
+      <ul><li class="pk">fecha</li><li>anio</li><li>mes</li><li>trimestre</li><li>mes_idx</li><li>etiqueta</li></ul>
+    </div>
+    <div class="relacion" aria-hidden="true">1 — N</div>
+    <div class="entidad entidad--hecho">
+      <p class="entidad__nombre">fact_valor</p>
+      <ul><li class="pk fk">fecha</li><li class="pk fk">serie_id</li><li>valor</li><li>estado</li></ul>
+    </div>
+    <div class="relacion" aria-hidden="true">N — 1</div>
+    <div class="entidad">
+      <p class="entidad__nombre">dim_serie</p>
+      <ul><li class="pk">serie_id</li><li>nombre</li><li>grupo</li><li>region</li><li>unidad</li><li>base</li><li>fuente</li><li>desfase_meses</li></ul>
+    </div>
+  </div>
+  <p class="nota">3.902 filas en <code>fact_valor</code> (33 series × meses, formato largo). <code>estado = 'sospechoso'</code> marca lo que la QA puso en cuarentena: se guarda pero las vistas no lo usan.</p>
+
+  <div class="grilla-vistas">
+    <div class="vista"><code>v_variacion</code><p>Variación mensual, interanual y acumulada en el año de cualquier serie, con <code>LAG()</code> y control de meses faltantes.</p></div>
+    <div class="vista"><code>v_inflacion</code><p>IPC por región, categoría y rubro con <code>RANK()</code> de picos mensuales e interanuales.</p></div>
+    <div class="vista"><code>v_salario_real</code><p>Salarios deflactados por IPC (dic‑2016 = 100) y caída desde el máximo con <code>MAX() OVER</code> acumulado.</p></div>
+    <div class="vista"><code>v_poder_compra</code><p>Pivote de ingresos y canastas: cuántas CBT compra cada ingreso.</p></div>
+    <div class="vista"><code>v_salario_usd</code><p>Ingresos divididos por el tipo de cambio oficial de cada mes.</p></div>
+    <div class="vista"><code>v_cobertura</code><p>Desde y hasta cuándo hay datos válidos de cada serie, y su rezago.</p></div>
+  </div>
+  <p><a href="https://github.com/JuanMBF/InflationArg/tree/main/sql">Ver los scripts completos en GitHub</a> · <a href="/InflationArg/descargas/inflationarg.db" download>Descargar la base SQLite</a></p>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="consultas-titulo">
+  <h2 id="consultas-titulo">Una consulta por pregunta</h2>
+  <article class="tarjeta consulta" id="consulta-01_respuesta_principal">
+    <h3><span class="consulta__num">01</span> ¿Le ganaron los salarios a la inflación entre dic‑2016 y el último mes con datos? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  indice_real = 100 es el mismo poder de compra que en dic‑2016; 90 es un 10 % menos. var_real_pct es la ganancia (+) o pérdida (-) de poder de compra en todo el período. Cada sector llega hasta su último mes con datos (columna hasta): el privado no registrado se publica con 5 meses de rezago y se fecha en el mes que mide, así que termina antes. maximo / minimo muestran el mejor y el peor momento de cada sector.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/01_respuesta_principal.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Le ganaron los salarios a la inflación entre dic-2016 y el último mes con datos?</span>
+<span class="c">-- Lectura: indice_real = 100 es el mismo poder de compra que en dic-2016; 90 es un 10 % menos.</span>
+<span class="c">-- var_real_pct es la ganancia (+) o pérdida (-) de poder de compra en todo el período.</span>
+<span class="c">-- Cada sector llega hasta su último mes con datos (columna hasta): el privado no registrado</span>
+<span class="c">-- se publica con 5 meses de rezago y se fecha en el mes que mide, así que termina antes.</span>
+<span class="c">-- maximo / minimo muestran el mejor y el peor momento de cada sector.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> ultimo <span class="k">AS</span> (
+    <span class="k">SELECT</span> serie_id, <span class="f">MAX</span>(fecha) <span class="k">AS</span> fecha
+    <span class="k">FROM</span> v_salario_real
+    <span class="k">GROUP BY</span> serie_id
+),
+extremos <span class="k">AS</span> (
+    <span class="k">SELECT</span>
+        serie_id,
+        <span class="f">MAX</span>(indice_real) <span class="k">AS</span> maximo,
+        <span class="f">MIN</span>(indice_real) <span class="k">AS</span> minimo
+    <span class="k">FROM</span> v_salario_real
+    <span class="k">GROUP BY</span> serie_id
+)
+<span class="k">SELECT</span>
+    r.serie_id,
+    r.nombre,
+    r.etiqueta <span class="k">AS</span> hasta,
+    <span class="f">ROUND</span>(r.indice_real, 2) <span class="k">AS</span> indice_real,
+    <span class="f">ROUND</span>(r.indice_real - 100, 2) <span class="k">AS</span> var_real_pct,
+    <span class="f">ROUND</span>(e.maximo, 2) <span class="k">AS</span> maximo,
+    (<span class="k">SELECT</span> etiqueta <span class="k">FROM</span> v_salario_real x <span class="k">WHERE</span> x.serie_id = r.serie_id <span class="k">AND</span> x.indice_real = e.maximo) <span class="k">AS</span> fecha_maximo,
+    <span class="f">ROUND</span>(e.minimo, 2) <span class="k">AS</span> minimo,
+    (<span class="k">SELECT</span> etiqueta <span class="k">FROM</span> v_salario_real x <span class="k">WHERE</span> x.serie_id = r.serie_id <span class="k">AND</span> x.indice_real = e.minimo) <span class="k">AS</span> fecha_minimo,
+    <span class="f">ROUND</span>(100 * r.caida_desde_maximo, 2) <span class="k">AS</span> distancia_al_maximo_pct,
+    <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> r.indice_real <span class="k">DESC</span>) <span class="k">AS</span> ranking
+<span class="k">FROM</span> v_salario_real <span class="k">AS</span> r
+<span class="k">JOIN</span> ultimo <span class="k">AS</span> u <span class="k">ON</span> u.serie_id = r.serie_id <span class="k">AND</span> u.fecha = r.fecha
+<span class="k">JOIN</span> extremos <span class="k">AS</span> e <span class="k">ON</span> e.serie_id = r.serie_id
+<span class="k">ORDER BY</span> ranking;</code></pre>
+    </details>
+    <details class="tabla-detalle" open>
+  <summary>Resultado (5 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (5 filas): ¿Le ganaron los salarios a la inflación entre dic-2016 y el último mes con datos?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Serie</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Índice real</th>
+          <th scope="col">Var. real %</th>
+          <th scope="col">Máximo</th>
+          <th scope="col">Mes del máximo</th>
+          <th scope="col">Mínimo</th>
+          <th scope="col">Mes del mínimo</th>
+          <th scope="col">Distancia al máximo %</th>
+          <th scope="col">Puesto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="">Privado no registrado</td>
+          <td class="">feb‑2026</td>
+          <td class="num">93,95</td>
+          <td class="num neg">-6,05</td>
+          <td class="num">103,00</td>
+          <td class="">jul‑2017</td>
+          <td class="num">53,54</td>
+          <td class="">ene‑2024</td>
+          <td class="num neg">-8,79</td>
+          <td class="num">1</td>
+        </tr>
+        <tr>
+          <td class="">Privado registrado</td>
+          <td class="">jul‑2026</td>
+          <td class="num">79,51</td>
+          <td class="num neg">-20,49</td>
+          <td class="num">104,91</td>
+          <td class="">ago‑2017</td>
+          <td class="num">72,34</td>
+          <td class="">mar‑2024</td>
+          <td class="num neg">-24,21</td>
+          <td class="num">2</td>
+        </tr>
+        <tr>
+          <td class="">Total</td>
+          <td class="">jul‑2026</td>
+          <td class="num">78,21</td>
+          <td class="num neg">-21,79</td>
+          <td class="num">104,51</td>
+          <td class="">ago‑2017</td>
+          <td class="num">62,06</td>
+          <td class="">mar‑2024</td>
+          <td class="num neg">-25,16</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td class="">Registrados</td>
+          <td class="">jul‑2026</td>
+          <td class="num">74,38</td>
+          <td class="num neg">-25,62</td>
+          <td class="num">104,17</td>
+          <td class="">ago‑2017</td>
+          <td class="num">68,21</td>
+          <td class="">ene‑2024</td>
+          <td class="num neg">-28,60</td>
+          <td class="num">4</td>
+        </tr>
+        <tr>
+          <td class="">Sector público</td>
+          <td class="">jul‑2026</td>
+          <td class="num">65,71</td>
+          <td class="num neg">-34,29</td>
+          <td class="num">103,15</td>
+          <td class="">oct‑2017</td>
+          <td class="num">60,99</td>
+          <td class="">ene‑2024</td>
+          <td class="num neg">-36,29</td>
+          <td class="num">5</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-02_ganadores_por_anio">
+    <h3><span class="consulta__num">02</span> ¿Qué sector salió mejor y cuál peor parado frente a la inflación cada año? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  var_real_pct compara diciembre contra diciembre del año anterior (el último año, contra el último mes en que hay dato de todos los sectores). Positivo = le ganó a la inflación. mejor / peor: el sector con mejor y peor resultado del año, aunque los dos hayan perdido (o ganado) contra la inflación.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/02_ganadores_por_anio.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Qué sector salió mejor y cuál peor parado frente a la inflación cada año?</span>
+<span class="c">-- Lectura: var_real_pct compara diciembre contra diciembre del año anterior</span>
+<span class="c">-- (el último año, contra el último mes en que hay dato de todos los sectores).</span>
+<span class="c">-- Positivo = le ganó a la inflación. mejor / peor: el sector con mejor y peor resultado</span>
+<span class="c">-- del año, aunque los dos hayan perdido (o ganado) contra la inflación.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> ultimo_comun <span class="k">AS</span> (
+    <span class="c">-- último mes con dato de todos los sectores: así el último año compara el mismo período</span>
+    <span class="k">SELECT</span> <span class="f">MIN</span>(hasta) <span class="k">AS</span> fecha
+    <span class="k">FROM</span> (
+        <span class="k">SELECT</span> serie_id, <span class="f">MAX</span>(fecha) <span class="k">AS</span> hasta
+        <span class="k">FROM</span> v_salario_real
+        <span class="k">WHERE</span> serie_id &lt;&gt; <span class="s">&#x27;sal_registrado&#x27;</span>
+        <span class="k">GROUP BY</span> serie_id
+    )
+),
+cierre <span class="k">AS</span> (
+    <span class="c">-- un punto por año: diciembre, o el último mes común del último año</span>
+    <span class="k">SELECT</span> serie_id, nombre, anio, fecha, indice_real
+    <span class="k">FROM</span> (
+        <span class="k">SELECT</span>
+            r.*,
+            <span class="f">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> serie_id, anio <span class="k">ORDER BY</span> fecha <span class="k">DESC</span>) <span class="k">AS</span> orden
+        <span class="k">FROM</span> v_salario_real <span class="k">AS</span> r
+        <span class="k">WHERE</span> r.serie_id &lt;&gt; <span class="s">&#x27;sal_registrado&#x27;</span>
+          <span class="k">AND</span> r.fecha &lt;= (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo_comun)
+    )
+    <span class="k">WHERE</span> orden = 1
+),
+anual <span class="k">AS</span> (
+    <span class="k">SELECT</span>
+        serie_id,
+        nombre,
+        anio,
+        fecha,
+        100 * (indice_real / <span class="f">LAG</span>(indice_real) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> serie_id <span class="k">ORDER BY</span> anio) - 1) <span class="k">AS</span> var_real_pct
+    <span class="k">FROM</span> cierre
+),
+ranking <span class="k">AS</span> (
+    <span class="k">SELECT</span>
+        a.*,
+        <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> anio <span class="k">ORDER BY</span> var_real_pct <span class="k">DESC</span>) <span class="k">AS</span> puesto,
+        <span class="f">COUNT</span>(*) <span class="k">OVER</span> (<span class="k">PARTITION BY</span> anio) <span class="k">AS</span> sectores
+    <span class="k">FROM</span> anual <span class="k">AS</span> a
+    <span class="k">WHERE</span> var_real_pct <span class="k">IS NOT NULL</span>
+      <span class="k">AND</span> serie_id &lt;&gt; <span class="s">&#x27;sal_total&#x27;</span>
+),
+total <span class="k">AS</span> (
+    <span class="k">SELECT</span> anio, var_real_pct <span class="k">FROM</span> anual <span class="k">WHERE</span> serie_id = <span class="s">&#x27;sal_total&#x27;</span>
+)
+<span class="k">SELECT</span>
+    r.anio,
+    (<span class="k">SELECT</span> d.etiqueta <span class="k">FROM</span> dim_fecha <span class="k">AS</span> d
+     <span class="k">WHERE</span> d.fecha = (<span class="k">SELECT</span> <span class="f">MAX</span>(x.fecha) <span class="k">FROM</span> ranking <span class="k">AS</span> x <span class="k">WHERE</span> x.anio = r.anio)) <span class="k">AS</span> hasta,
+    <span class="f">ROUND</span>(<span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> r.serie_id = <span class="s">&#x27;sal_privado&#x27;</span> <span class="k">THEN</span> r.var_real_pct <span class="k">END</span>), 2) <span class="k">AS</span> privado_registrado,
+    <span class="f">ROUND</span>(<span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> r.serie_id = <span class="s">&#x27;sal_publico&#x27;</span> <span class="k">THEN</span> r.var_real_pct <span class="k">END</span>), 2) <span class="k">AS</span> publico,
+    <span class="f">ROUND</span>(<span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> r.serie_id = <span class="s">&#x27;sal_no_registrado&#x27;</span> <span class="k">THEN</span> r.var_real_pct <span class="k">END</span>), 2) <span class="k">AS</span> no_registrado,
+    <span class="f">ROUND</span>(<span class="f">MAX</span>(t.var_real_pct), 2) <span class="k">AS</span> total,
+    <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> r.puesto = 1 <span class="k">THEN</span> r.nombre <span class="k">END</span>) <span class="k">AS</span> ganador,
+    <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> r.puesto = r.sectores <span class="k">THEN</span> r.nombre <span class="k">END</span>) <span class="k">AS</span> perdedor
+<span class="k">FROM</span> ranking <span class="k">AS</span> r
+<span class="k">LEFT JOIN</span> total <span class="k">AS</span> t <span class="k">ON</span> t.anio = r.anio
+<span class="k">GROUP BY</span> r.anio
+<span class="k">ORDER BY</span> r.anio;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (10 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (10 filas): ¿Qué sector salió mejor y cuál peor parado frente a la inflación cada año?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Año</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Privado registrado %</th>
+          <th scope="col">Público %</th>
+          <th scope="col">No registrado %</th>
+          <th scope="col">Total %</th>
+          <th scope="col">Mejor sector</th>
+          <th scope="col">Peor sector</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">2017</td>
+          <td class="">dic‑2017</td>
+          <td class="num">2,03</td>
+          <td class="num">0,15</td>
+          <td class="num neg">-1,23</td>
+          <td class="num">2,15</td>
+          <td class="">Privado registrado</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2018</td>
+          <td class="">dic‑2018</td>
+          <td class="num neg">-11,67</td>
+          <td class="num neg">-11,77</td>
+          <td class="num neg">-10,58</td>
+          <td class="num neg">-12,16</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2019</td>
+          <td class="">dic‑2019</td>
+          <td class="num neg">-6,20</td>
+          <td class="num neg">-7,12</td>
+          <td class="num neg">-14,11</td>
+          <td class="num neg">-8,41</td>
+          <td class="">Privado registrado</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2020</td>
+          <td class="">dic‑2020</td>
+          <td class="num neg">-1,31</td>
+          <td class="num neg">-6,85</td>
+          <td class="num">3,10</td>
+          <td class="num neg">-2,32</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2021</td>
+          <td class="">dic‑2021</td>
+          <td class="num">2,87</td>
+          <td class="num">5,10</td>
+          <td class="num">1,27</td>
+          <td class="num">1,60</td>
+          <td class="">Sector público</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2022</td>
+          <td class="">dic‑2022</td>
+          <td class="num neg">-0,53</td>
+          <td class="num">2,35</td>
+          <td class="num neg">-8,91</td>
+          <td class="num neg">-2,28</td>
+          <td class="">Sector público</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2023</td>
+          <td class="">dic‑2023</td>
+          <td class="num neg">-14,65</td>
+          <td class="num neg">-20,18</td>
+          <td class="num neg">-18,04</td>
+          <td class="num neg">-18,86</td>
+          <td class="">Privado registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2024</td>
+          <td class="">dic‑2024</td>
+          <td class="num">13,66</td>
+          <td class="num">0,70</td>
+          <td class="num">22,65</td>
+          <td class="num">12,72</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2025</td>
+          <td class="">dic‑2025</td>
+          <td class="num neg">-2,13</td>
+          <td class="num neg">-2,00</td>
+          <td class="num">26,39</td>
+          <td class="num">5,08</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Privado registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2026</td>
+          <td class="">feb‑2026</td>
+          <td class="num neg">-2,02</td>
+          <td class="num neg">-1,59</td>
+          <td class="num">2,49</td>
+          <td class="num neg">-0,79</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Privado registrado</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-03_inflacion_picos">
+    <h3><span class="consulta__num">03</span> ¿Cuáles fueron los meses de mayor inflación desde 2017? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  top 10 de variación mensual del IPC nacional, con la interanual de ese mes y el puesto que ocupa también en el ranking de inflación interanual.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/03_inflacion_picos.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Cuáles fueron los meses de mayor inflación desde 2017?</span>
+<span class="c">-- Lectura: top 10 de variación mensual del IPC nacional, con la interanual de ese mes</span>
+<span class="c">-- y el puesto que ocupa también en el ranking de inflación interanual.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">SELECT</span>
+    ranking_mensual <span class="k">AS</span> puesto,
+    etiqueta <span class="k">AS</span> mes,
+    <span class="f">ROUND</span>(100 * var_mensual, 2) <span class="k">AS</span> inflacion_mensual_pct,
+    <span class="f">ROUND</span>(100 * var_interanual, 2) <span class="k">AS</span> inflacion_interanual_pct,
+    ranking_interanual <span class="k">AS</span> puesto_interanual
+<span class="k">FROM</span> v_inflacion
+<span class="k">WHERE</span> serie_id = <span class="s">&#x27;ipc_nacional&#x27;</span>
+  <span class="k">AND</span> ranking_mensual &lt;= 10
+<span class="k">ORDER BY</span> ranking_mensual;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (10 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (10 filas): ¿Cuáles fueron los meses de mayor inflación desde 2017?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Puesto</th>
+          <th scope="col">Mes</th>
+          <th scope="col">Mensual %</th>
+          <th scope="col">Interanual %</th>
+          <th scope="col">Puesto interanual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="">dic‑2023</td>
+          <td class="num">25,47</td>
+          <td class="num">211,41</td>
+          <td class="num">9</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td class="">ene‑2024</td>
+          <td class="num">20,61</td>
+          <td class="num">254,25</td>
+          <td class="num">7</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td class="">feb‑2024</td>
+          <td class="num">13,24</td>
+          <td class="num">276,22</td>
+          <td class="num">4</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td class="">nov‑2023</td>
+          <td class="num">12,81</td>
+          <td class="num">160,92</td>
+          <td class="num">13</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td class="">sep‑2023</td>
+          <td class="num">12,75</td>
+          <td class="num">138,28</td>
+          <td class="num">15</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td class="">ago‑2023</td>
+          <td class="num">12,44</td>
+          <td class="num">124,37</td>
+          <td class="num">16</td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <td class="">mar‑2024</td>
+          <td class="num">11,01</td>
+          <td class="num">287,87</td>
+          <td class="num">2</td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <td class="">abr‑2024</td>
+          <td class="num">8,83</td>
+          <td class="num">289,40</td>
+          <td class="num">1</td>
+        </tr>
+        <tr>
+          <td class="num">9</td>
+          <td class="">abr‑2023</td>
+          <td class="num">8,40</td>
+          <td class="num">108,83</td>
+          <td class="num">21</td>
+        </tr>
+        <tr>
+          <td class="num">10</td>
+          <td class="">oct‑2023</td>
+          <td class="num">8,30</td>
+          <td class="num">142,66</td>
+          <td class="num">14</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-04_inflacion_anual_por_categoria">
+    <h3><span class="consulta__num">04</span> ¿Cuánta inflación hubo cada año y qué la empujó: núcleo, regulados o estacionales? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  variación diciembre contra diciembre (el último año: acumulada hasta el último mes). regulados - nucleo &gt; 0 indica que las tarifas y precios regulados subieron más que el resto.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/04_inflacion_anual_por_categoria.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Cuánta inflación hubo cada año y qué la empujó: núcleo, regulados o estacionales?</span>
+<span class="c">-- Lectura: variación diciembre contra diciembre (el último año: acumulada hasta el último mes).</span>
+<span class="c">-- regulados - nucleo &gt; 0 indica que las tarifas y precios regulados subieron más que el resto.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> cierre <span class="k">AS</span> (
+    <span class="k">SELECT</span>
+        serie_id,
+        anio,
+        fecha,
+        var_acumulada_anio,
+        <span class="f">ROW_NUMBER</span>() <span class="k">OVER</span> (<span class="k">PARTITION BY</span> serie_id, anio <span class="k">ORDER BY</span> fecha <span class="k">DESC</span>) <span class="k">AS</span> orden
+    <span class="k">FROM</span> v_variacion
+    <span class="k">WHERE</span> serie_id <span class="k">IN</span> (<span class="s">&#x27;ipc_nacional&#x27;</span>, <span class="s">&#x27;ipc_nucleo&#x27;</span>, <span class="s">&#x27;ipc_regulados&#x27;</span>, <span class="s">&#x27;ipc_estacionales&#x27;</span>)
+      <span class="k">AND</span> var_acumulada_anio <span class="k">IS NOT NULL</span>
+)
+<span class="k">SELECT</span>
+    anio,
+    (<span class="k">SELECT</span> d.etiqueta <span class="k">FROM</span> dim_fecha <span class="k">AS</span> d
+     <span class="k">WHERE</span> d.fecha = (<span class="k">SELECT</span> <span class="f">MAX</span>(x.fecha) <span class="k">FROM</span> cierre <span class="k">AS</span> x <span class="k">WHERE</span> x.anio = cierre.anio <span class="k">AND</span> x.orden = 1)) <span class="k">AS</span> hasta,
+    <span class="f">ROUND</span>(100 * <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> serie_id = <span class="s">&#x27;ipc_nacional&#x27;</span> <span class="k">THEN</span> var_acumulada_anio <span class="k">END</span>), 2) <span class="k">AS</span> nivel_general,
+    <span class="f">ROUND</span>(100 * <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> serie_id = <span class="s">&#x27;ipc_nucleo&#x27;</span> <span class="k">THEN</span> var_acumulada_anio <span class="k">END</span>), 2) <span class="k">AS</span> nucleo,
+    <span class="f">ROUND</span>(100 * <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> serie_id = <span class="s">&#x27;ipc_regulados&#x27;</span> <span class="k">THEN</span> var_acumulada_anio <span class="k">END</span>), 2) <span class="k">AS</span> regulados,
+    <span class="f">ROUND</span>(100 * <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> serie_id = <span class="s">&#x27;ipc_estacionales&#x27;</span> <span class="k">THEN</span> var_acumulada_anio <span class="k">END</span>), 2) <span class="k">AS</span> estacionales,
+    <span class="f">ROUND</span>(100 * (<span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> serie_id = <span class="s">&#x27;ipc_regulados&#x27;</span> <span class="k">THEN</span> var_acumulada_anio <span class="k">END</span>)
+               - <span class="f">MAX</span>(<span class="k">CASE</span> <span class="k">WHEN</span> serie_id = <span class="s">&#x27;ipc_nucleo&#x27;</span> <span class="k">THEN</span> var_acumulada_anio <span class="k">END</span>)), 2) <span class="k">AS</span> regulados_menos_nucleo
+<span class="k">FROM</span> cierre
+<span class="k">WHERE</span> orden = 1
+<span class="k">GROUP BY</span> anio
+<span class="k">ORDER BY</span> anio;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (10 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (10 filas): ¿Cuánta inflación hubo cada año y qué la empujó: núcleo, regulados o estacionales?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Año</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Nivel general %</th>
+          <th scope="col">Núcleo %</th>
+          <th scope="col">Regulados %</th>
+          <th scope="col">Estacionales %</th>
+          <th scope="col">Regulados − núcleo (pp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">2017</td>
+          <td class="">dic‑2017</td>
+          <td class="num">24,80</td>
+          <td class="num">21,13</td>
+          <td class="num">38,70</td>
+          <td class="num">21,46</td>
+          <td class="num">17,57</td>
+        </tr>
+        <tr>
+          <td class="num">2018</td>
+          <td class="">dic‑2018</td>
+          <td class="num">47,65</td>
+          <td class="num">47,72</td>
+          <td class="num">53,46</td>
+          <td class="num">35,24</td>
+          <td class="num">5,74</td>
+        </tr>
+        <tr>
+          <td class="num">2019</td>
+          <td class="">dic‑2019</td>
+          <td class="num">53,83</td>
+          <td class="num">56,66</td>
+          <td class="num">48,22</td>
+          <td class="num">48,95</td>
+          <td class="num">-8,43</td>
+        </tr>
+        <tr>
+          <td class="num">2020</td>
+          <td class="">dic‑2020</td>
+          <td class="num">36,14</td>
+          <td class="num">39,40</td>
+          <td class="num">14,76</td>
+          <td class="num">64,39</td>
+          <td class="num">-24,64</td>
+        </tr>
+        <tr>
+          <td class="num">2021</td>
+          <td class="">dic‑2021</td>
+          <td class="num">50,94</td>
+          <td class="num">54,87</td>
+          <td class="num">37,72</td>
+          <td class="num">50,08</td>
+          <td class="num">-17,15</td>
+        </tr>
+        <tr>
+          <td class="num">2022</td>
+          <td class="">dic‑2022</td>
+          <td class="num">94,79</td>
+          <td class="num">90,62</td>
+          <td class="num">85,67</td>
+          <td class="num">134,12</td>
+          <td class="num">-4,95</td>
+        </tr>
+        <tr>
+          <td class="num">2023</td>
+          <td class="">dic‑2023</td>
+          <td class="num">211,41</td>
+          <td class="num">229,41</td>
+          <td class="num">164,94</td>
+          <td class="num">178,98</td>
+          <td class="num">-64,46</td>
+        </tr>
+        <tr>
+          <td class="num">2024</td>
+          <td class="">dic‑2024</td>
+          <td class="num">117,76</td>
+          <td class="num">105,50</td>
+          <td class="num">205,88</td>
+          <td class="num">87,32</td>
+          <td class="num">100,38</td>
+        </tr>
+        <tr>
+          <td class="num">2025</td>
+          <td class="">dic‑2025</td>
+          <td class="num">31,55</td>
+          <td class="num">33,09</td>
+          <td class="num">34,21</td>
+          <td class="num">16,95</td>
+          <td class="num">1,12</td>
+        </tr>
+        <tr>
+          <td class="num">2026</td>
+          <td class="">sep‑2026</td>
+          <td class="num">23,64</td>
+          <td class="num">21,77</td>
+          <td class="num">31,47</td>
+          <td class="num">20,29</td>
+          <td class="num">9,71</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-05_rubros_ranking">
+    <h3><span class="consulta__num">05</span> ¿Qué rubros del IPC subieron más y cuáles menos? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  acumulado_desde_dic2016_pct = cuánto subió cada rubro desde la base; veces = cuántas veces se multiplicó el precio (índice / 100). ultimo_anio_pct = variación interanual del último mes. acumulado_vs_general_pct = cuánto más caro (o más barato) quedó el rubro que el nivel general, en % (cociente de índices); ultimo_anio_vs_general_pp = interanual del rubro menos la del nivel general, en puntos porcentuales. Positivo = el rubro se encareció más que el promedio.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/05_rubros_ranking.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Qué rubros del IPC subieron más y cuáles menos?</span>
+<span class="c">-- Lectura: acumulado_desde_dic2016_pct = cuánto subió cada rubro desde la base;</span>
+<span class="c">-- veces = cuántas veces se multiplicó el precio (índice / 100).</span>
+<span class="c">-- ultimo_anio_pct = variación interanual del último mes.</span>
+<span class="c">-- acumulado_vs_general_pct = cuánto más caro (o más barato) quedó el rubro que el nivel general,</span>
+<span class="c">-- en % (cociente de índices); ultimo_anio_vs_general_pp = interanual del rubro menos la del</span>
+<span class="c">-- nivel general, en puntos porcentuales. Positivo = el rubro se encareció más que el promedio.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> ultimo <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="f">MAX</span>(fecha) <span class="k">AS</span> fecha <span class="k">FROM</span> v_variacion <span class="k">WHERE</span> grupo = <span class="s">&#x27;ipc_rubro&#x27;</span>
+),
+general <span class="k">AS</span> (
+    <span class="k">SELECT</span> valor, var_interanual
+    <span class="k">FROM</span> v_variacion
+    <span class="k">WHERE</span> serie_id = <span class="s">&#x27;ipc_nacional&#x27;</span> <span class="k">AND</span> fecha = (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo)
+)
+<span class="k">SELECT</span>
+    <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> v.valor <span class="k">DESC</span>) <span class="k">AS</span> puesto_acumulado,
+    v.nombre <span class="k">AS</span> rubro,
+    v.etiqueta <span class="k">AS</span> hasta,
+    <span class="f">ROUND</span>(v.valor / 100, 1) <span class="k">AS</span> veces,
+    <span class="f">ROUND</span>(v.valor - 100, 1) <span class="k">AS</span> acumulado_desde_dic2016_pct,
+    <span class="f">ROUND</span>(100 * (v.valor / g.valor - 1), 1) <span class="k">AS</span> acumulado_vs_general_pct,
+    <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> v.var_interanual <span class="k">DESC</span>) <span class="k">AS</span> puesto_ultimo_anio,
+    <span class="f">ROUND</span>(100 * v.var_interanual, 2) <span class="k">AS</span> ultimo_anio_pct,
+    <span class="f">ROUND</span>(100 * (v.var_interanual - g.var_interanual), 2) <span class="k">AS</span> ultimo_anio_vs_general_pp
+<span class="k">FROM</span> v_variacion <span class="k">AS</span> v
+<span class="k">CROSS JOIN</span> general <span class="k">AS</span> g
+<span class="k">WHERE</span> v.grupo = <span class="s">&#x27;ipc_rubro&#x27;</span>
+  <span class="k">AND</span> v.fecha = (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo)
+<span class="k">ORDER BY</span> puesto_acumulado;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (12 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (12 filas): ¿Qué rubros del IPC subieron más y cuáles menos?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Puesto</th>
+          <th scope="col">Rubro</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Veces</th>
+          <th scope="col">Acumulado desde dic‑2016 %</th>
+          <th scope="col">Vs. nivel general %</th>
+          <th scope="col">Puesto último año</th>
+          <th scope="col">Último año %</th>
+          <th scope="col">Vs. general (pp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="">Restaurantes y hoteles</td>
+          <td class="">sep‑2026</td>
+          <td class="num">153,6</td>
+          <td class="num">15.256,6</td>
+          <td class="num">22,7</td>
+          <td class="num">6</td>
+          <td class="num">34,56</td>
+          <td class="num">1,21</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td class="">Vivienda, agua, electricidad y combustibles</td>
+          <td class="">sep‑2026</td>
+          <td class="num">143,2</td>
+          <td class="num">14.221,9</td>
+          <td class="num">14,4</td>
+          <td class="num">1</td>
+          <td class="num">49,10</td>
+          <td class="num">15,74</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td class="">Salud</td>
+          <td class="">sep‑2026</td>
+          <td class="num">141,9</td>
+          <td class="num">14.093,0</td>
+          <td class="num">13,4</td>
+          <td class="num">7</td>
+          <td class="num">33,29</td>
+          <td class="num neg">-0,06</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td class="">Alimentos y bebidas no alcohólicas</td>
+          <td class="">sep‑2026</td>
+          <td class="num">133,8</td>
+          <td class="num">13.284,2</td>
+          <td class="num">7,0</td>
+          <td class="num">5</td>
+          <td class="num">35,06</td>
+          <td class="num">1,70</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td class="">Transporte</td>
+          <td class="">sep‑2026</td>
+          <td class="num">131,6</td>
+          <td class="num">13.063,2</td>
+          <td class="num">5,2</td>
+          <td class="num">4</td>
+          <td class="num">36,22</td>
+          <td class="num">2,87</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td class="">Bienes y servicios varios</td>
+          <td class="">sep‑2026</td>
+          <td class="num">121,4</td>
+          <td class="num">12.038,4</td>
+          <td class="num neg">-3,0</td>
+          <td class="num">8</td>
+          <td class="num">32,48</td>
+          <td class="num neg">-0,87</td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <td class="">Educación</td>
+          <td class="">sep‑2026</td>
+          <td class="num">118,6</td>
+          <td class="num">11.764,2</td>
+          <td class="num neg">-5,2</td>
+          <td class="num">2</td>
+          <td class="num">39,86</td>
+          <td class="num">6,50</td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <td class="">Comunicación</td>
+          <td class="">sep‑2026</td>
+          <td class="num">117,4</td>
+          <td class="num">11.636,6</td>
+          <td class="num neg">-6,2</td>
+          <td class="num">3</td>
+          <td class="num">37,27</td>
+          <td class="num">3,91</td>
+        </tr>
+        <tr>
+          <td class="num">9</td>
+          <td class="">Recreación y cultura</td>
+          <td class="">sep‑2026</td>
+          <td class="num">112,9</td>
+          <td class="num">11.190,2</td>
+          <td class="num neg">-9,8</td>
+          <td class="num">9</td>
+          <td class="num">32,17</td>
+          <td class="num neg">-1,19</td>
+        </tr>
+        <tr>
+          <td class="num">10</td>
+          <td class="">Equipamiento y mantenimiento del hogar</td>
+          <td class="">sep‑2026</td>
+          <td class="num">99,6</td>
+          <td class="num">9.855,2</td>
+          <td class="num neg">-20,4</td>
+          <td class="num">10</td>
+          <td class="num">23,69</td>
+          <td class="num neg">-9,67</td>
+        </tr>
+        <tr>
+          <td class="num">11</td>
+          <td class="">Bebidas alcohólicas y tabaco</td>
+          <td class="">sep‑2026</td>
+          <td class="num">86,2</td>
+          <td class="num">8.522,1</td>
+          <td class="num neg">-31,1</td>
+          <td class="num">11</td>
+          <td class="num">22,44</td>
+          <td class="num neg">-10,92</td>
+        </tr>
+        <tr>
+          <td class="num">12</td>
+          <td class="">Prendas de vestir y calzado</td>
+          <td class="">sep‑2026</td>
+          <td class="num">83,3</td>
+          <td class="num">8.232,3</td>
+          <td class="num neg">-33,4</td>
+          <td class="num">12</td>
+          <td class="num">10,31</td>
+          <td class="num neg">-23,05</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-06_poder_compra_canastas">
+    <h3><span class="consulta__num">06</span> ¿Cuántas Canastas Básicas Totales compran el salario promedio (RIPTE), el salario mínimo y la jubilación mínima? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  CBT de un adulto equivalente en GBA. Menos de 1 = ese ingreso no alcanza para que una sola persona adulta supere la línea de pobreza. Un punto por año (diciembre) más el último mes con todas las series.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/06_poder_compra_canastas.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Cuántas Canastas Básicas Totales compran el salario promedio (RIPTE),</span>
+<span class="c">-- el salario mínimo y la jubilación mínima?</span>
+<span class="c">-- Lectura: CBT de un adulto equivalente en GBA. Menos de 1 = ese ingreso no alcanza</span>
+<span class="c">-- para que una sola persona adulta supere la línea de pobreza.</span>
+<span class="c">-- Un punto por año (diciembre) más el último mes con todas las series.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> completo <span class="k">AS</span> (
+    <span class="k">SELECT</span> *
+    <span class="k">FROM</span> v_poder_compra
+    <span class="k">WHERE</span> ripte <span class="k">IS NOT NULL</span> <span class="k">AND</span> smvm <span class="k">IS NOT NULL</span> <span class="k">AND</span> haber_minimo <span class="k">IS NOT NULL</span>
+),
+ultimo <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="f">MAX</span>(fecha) <span class="k">AS</span> fecha <span class="k">FROM</span> completo
+)
+<span class="k">SELECT</span>
+    etiqueta <span class="k">AS</span> mes,
+    <span class="f">ROUND</span>(cbt, 2) <span class="k">AS</span> cbt_pesos,
+    <span class="f">ROUND</span>(cbt_por_ripte, 2) <span class="k">AS</span> cbt_por_ripte,
+    <span class="f">ROUND</span>(cbt_por_smvm, 2) <span class="k">AS</span> cbt_por_salario_minimo,
+    <span class="f">ROUND</span>(cbt_por_haber_minimo, 2) <span class="k">AS</span> cbt_por_jubilacion_minima,
+    <span class="k">CASE</span> <span class="k">WHEN</span> fecha = (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo) <span class="k">THEN</span> 1 <span class="k">ELSE</span> 0 <span class="k">END</span> <span class="k">AS</span> es_ultimo
+<span class="k">FROM</span> completo
+<span class="k">WHERE</span> mes = 12 <span class="k">OR</span> fecha = (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo)
+<span class="k">ORDER BY</span> fecha;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (11 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (11 filas): ¿Cuántas Canastas Básicas Totales compran el salario promedio (RIPTE), el salario mínimo y la jubilación mínima?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Mes</th>
+          <th scope="col">CBT ($)</th>
+          <th scope="col">CBT por RIPTE</th>
+          <th scope="col">CBT por salario mínimo</th>
+          <th scope="col">CBT por jubilación mínima</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="">dic‑2016</td>
+          <td class="num">4.258</td>
+          <td class="num">4,86</td>
+          <td class="num">1,78</td>
+          <td class="num">1,33</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2017</td>
+          <td class="num">5.397</td>
+          <td class="num">4,87</td>
+          <td class="num">1,64</td>
+          <td class="num">1,34</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2018</td>
+          <td class="num">8.250</td>
+          <td class="num">4,16</td>
+          <td class="num">1,37</td>
+          <td class="num">1,13</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2019</td>
+          <td class="num">12.609</td>
+          <td class="num">3,93</td>
+          <td class="num">1,34</td>
+          <td class="num">1,12</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2020</td>
+          <td class="num">17.543</td>
+          <td class="num">3,81</td>
+          <td class="num">1,17</td>
+          <td class="num">1,09</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2021</td>
+          <td class="num">24.643</td>
+          <td class="num">4,16</td>
+          <td class="num">1,30</td>
+          <td class="num">1,18</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2022</td>
+          <td class="num">49.358</td>
+          <td class="num">3,93</td>
+          <td class="num">1,26</td>
+          <td class="num">1,02</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2023</td>
+          <td class="num">160.453</td>
+          <td class="num">3,02</td>
+          <td class="num">0,97</td>
+          <td class="num">0,66</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2024</td>
+          <td class="num">331.532</td>
+          <td class="num">3,63</td>
+          <td class="num">0,84</td>
+          <td class="num">0,78</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2025</td>
+          <td class="num">423.532</td>
+          <td class="num">3,86</td>
+          <td class="num">0,79</td>
+          <td class="num">0,80</td>
+        </tr>
+        <tr>
+          <td class="">jul‑2026</td>
+          <td class="num">506.381</td>
+          <td class="num">3,84</td>
+          <td class="num">0,74</td>
+          <td class="num">0,81</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-07_regiones">
+    <h3><span class="consulta__num">07</span> ¿En qué región del país subieron más los precios? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  acumulado desde dic‑2016 e interanual del último mes por región, con su puesto. diferencia_vs_pais_pp = puntos porcentuales por encima (+) o debajo (-) del total país.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/07_regiones.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿En qué región del país subieron más los precios?</span>
+<span class="c">-- Lectura: acumulado desde dic-2016 e interanual del último mes por región, con su</span>
+<span class="c">-- puesto. diferencia_vs_pais_pp = puntos porcentuales por encima (+) o debajo (-) del total país.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> ultimo <span class="k">AS</span> (
+    <span class="k">SELECT</span> <span class="f">MAX</span>(fecha) <span class="k">AS</span> fecha <span class="k">FROM</span> v_variacion <span class="k">WHERE</span> grupo = <span class="s">&#x27;ipc_region&#x27;</span>
+),
+pais <span class="k">AS</span> (
+    <span class="k">SELECT</span> var_interanual <span class="k">FROM</span> v_variacion
+    <span class="k">WHERE</span> serie_id = <span class="s">&#x27;ipc_nacional&#x27;</span> <span class="k">AND</span> fecha = (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo)
+)
+<span class="k">SELECT</span>
+    v.region,
+    v.nombre,
+    v.etiqueta <span class="k">AS</span> hasta,
+    <span class="f">ROUND</span>(v.valor - 100, 1) <span class="k">AS</span> acumulado_desde_dic2016_pct,
+    <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> v.valor <span class="k">DESC</span>) <span class="k">AS</span> puesto_acumulado,
+    <span class="f">ROUND</span>(100 * v.var_interanual, 2) <span class="k">AS</span> interanual_pct,
+    <span class="f">RANK</span>() <span class="k">OVER</span> (<span class="k">ORDER BY</span> v.var_interanual <span class="k">DESC</span>) <span class="k">AS</span> puesto_interanual,
+    <span class="f">ROUND</span>(100 * (v.var_interanual - p.var_interanual), 2) <span class="k">AS</span> diferencia_vs_pais_pp
+<span class="k">FROM</span> v_variacion <span class="k">AS</span> v
+<span class="k">CROSS JOIN</span> pais <span class="k">AS</span> p
+<span class="k">WHERE</span> v.grupo = <span class="s">&#x27;ipc_region&#x27;</span>
+  <span class="k">AND</span> v.fecha = (<span class="k">SELECT</span> fecha <span class="k">FROM</span> ultimo)
+<span class="k">ORDER BY</span> <span class="k">CASE</span> <span class="k">WHEN</span> v.region = <span class="s">&#x27;nacional&#x27;</span> <span class="k">THEN</span> 0 <span class="k">ELSE</span> 1 <span class="k">END</span>, puesto_acumulado;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (7 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (7 filas): ¿En qué región del país subieron más los precios?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Serie</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Acumulado desde dic‑2016 %</th>
+          <th scope="col">Puesto</th>
+          <th scope="col">Interanual %</th>
+          <th scope="col">Puesto interanual</th>
+          <th scope="col">Vs. país (pp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="">Total país</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.414,2</td>
+          <td class="num">5</td>
+          <td class="num">33,35</td>
+          <td class="num">4</td>
+          <td class="num">0,00</td>
+        </tr>
+        <tr>
+          <td class="">Noroeste (NOA)</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.531,5</td>
+          <td class="num">1</td>
+          <td class="num">33,59</td>
+          <td class="num">2</td>
+          <td class="num">0,23</td>
+        </tr>
+        <tr>
+          <td class="">Noreste (NEA)</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.515,4</td>
+          <td class="num">2</td>
+          <td class="num">36,86</td>
+          <td class="num">1</td>
+          <td class="num">3,51</td>
+        </tr>
+        <tr>
+          <td class="">Cuyo</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.491,9</td>
+          <td class="num">3</td>
+          <td class="num">33,03</td>
+          <td class="num">6</td>
+          <td class="num neg">-0,33</td>
+        </tr>
+        <tr>
+          <td class="">GBA</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.423,2</td>
+          <td class="num">4</td>
+          <td class="num">33,54</td>
+          <td class="num">3</td>
+          <td class="num">0,19</td>
+        </tr>
+        <tr>
+          <td class="">Pampeana</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.363,8</td>
+          <td class="num">6</td>
+          <td class="num">33,06</td>
+          <td class="num">5</td>
+          <td class="num neg">-0,29</td>
+        </tr>
+        <tr>
+          <td class="">Patagonia</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.334,5</td>
+          <td class="num">7</td>
+          <td class="num">30,29</td>
+          <td class="num">7</td>
+          <td class="num neg">-3,06</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-08_salario_en_dolares">
+    <h3><span class="consulta__num">08</span> ¿Cuánto vale el salario en dólares oficiales y cómo cambió? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  promedio anual del RIPTE, del salario mínimo y de la jubilación mínima divididos por el tipo de cambio oficial de valuación del BCRA de cada mes. El año en curso promedia solo los meses disponibles (columna meses).</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/08_salario_en_dolares.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Cuánto vale el salario en dólares oficiales y cómo cambió?</span>
+<span class="c">-- Lectura: promedio anual del RIPTE, del salario mínimo y de la jubilación mínima</span>
+<span class="c">-- divididos por el tipo de cambio oficial de valuación del BCRA de cada mes.</span>
+<span class="c">-- El año en curso promedia solo los meses disponibles (columna meses).</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">SELECT</span>
+    anio,
+    <span class="f">COUNT</span>(*) <span class="k">AS</span> meses,
+    <span class="f">ROUND</span>(<span class="f">AVG</span>(ripte_usd), 0) <span class="k">AS</span> ripte_usd,
+    <span class="f">ROUND</span>(<span class="f">AVG</span>(smvm_usd), 0) <span class="k">AS</span> salario_minimo_usd,
+    <span class="f">ROUND</span>(<span class="f">AVG</span>(haber_minimo_usd), 0) <span class="k">AS</span> jubilacion_minima_usd,
+    <span class="f">ROUND</span>(<span class="f">AVG</span>(tc_oficial), 2) <span class="k">AS</span> tipo_cambio_promedio
+<span class="k">FROM</span> v_salario_usd
+<span class="k">WHERE</span> ripte_usd <span class="k">IS NOT NULL</span>
+  <span class="k">AND</span> anio &gt;= 2017
+<span class="k">GROUP BY</span> anio
+<span class="k">ORDER BY</span> anio;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (10 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (10 filas): ¿Cuánto vale el salario en dólares oficiales y cómo cambió?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Año</th>
+          <th scope="col">Meses</th>
+          <th scope="col">RIPTE (US$)</th>
+          <th scope="col">Salario mínimo (US$)</th>
+          <th scope="col">Jubilación mínima (US$)</th>
+          <th scope="col">Tipo de cambio ($/US$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">2017</td>
+          <td class="num">12</td>
+          <td class="num">1.442</td>
+          <td class="num">511</td>
+          <td class="num">396</td>
+          <td class="num">16,55</td>
+        </tr>
+        <tr>
+          <td class="num">2018</td>
+          <td class="num">12</td>
+          <td class="num">1.137</td>
+          <td class="num">378</td>
+          <td class="num">303</td>
+          <td class="num">28,08</td>
+        </tr>
+        <tr>
+          <td class="num">2019</td>
+          <td class="num">12</td>
+          <td class="num">896</td>
+          <td class="num">287</td>
+          <td class="num">239</td>
+          <td class="num">48,19</td>
+        </tr>
+        <tr>
+          <td class="num">2020</td>
+          <td class="num">12</td>
+          <td class="num">851</td>
+          <td class="num">249</td>
+          <td class="num">236</td>
+          <td class="num">70,62</td>
+        </tr>
+        <tr>
+          <td class="num">2021</td>
+          <td class="num">12</td>
+          <td class="num">905</td>
+          <td class="num">278</td>
+          <td class="num">241</td>
+          <td class="num">95,07</td>
+        </tr>
+        <tr>
+          <td class="num">2022</td>
+          <td class="num">12</td>
+          <td class="num">1.125</td>
+          <td class="num">342</td>
+          <td class="num">287</td>
+          <td class="num">130,54</td>
+        </tr>
+        <tr>
+          <td class="num">2023</td>
+          <td class="num">12</td>
+          <td class="num">1.140</td>
+          <td class="num">356</td>
+          <td class="num">253</td>
+          <td class="num">295,60</td>
+        </tr>
+        <tr>
+          <td class="num">2024</td>
+          <td class="num">12</td>
+          <td class="num">1.003</td>
+          <td class="num">256</td>
+          <td class="num">211</td>
+          <td class="num">916,15</td>
+        </tr>
+        <tr>
+          <td class="num">2025</td>
+          <td class="num">12</td>
+          <td class="num">1.187</td>
+          <td class="num">253</td>
+          <td class="num">246</td>
+          <td class="num">1.244,52</td>
+        </tr>
+        <tr>
+          <td class="num">2026</td>
+          <td class="num">7</td>
+          <td class="num">1.275</td>
+          <td class="num">251</td>
+          <td class="num">268</td>
+          <td class="num">1.424,20</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+  <article class="tarjeta consulta" id="consulta-09_vigencia_de_conclusiones">
+    <h3><span class="consulta__num">09</span> ¿Hasta qué mes vale cada conclusión? </h3>
+<p class="nota"><strong>Cómo se lee:</strong>  las series se publican con rezagos distintos; cada análisis llega hasta el último mes en que TODAS sus series tienen dato válido (sin valores a futuro ni sospechosos). El privado no registrado va aparte: el INDEC lo publica con 5 meses de rezago y acá se fecha en el mes que mide, así que termina antes que el resto de los salarios.</p>    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/09_vigencia_de_conclusiones.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code><span class="c">-- =====================================================================</span>
+<span class="c">-- Pregunta: ¿Hasta qué mes vale cada conclusión?</span>
+<span class="c">-- Lectura: las series se publican con rezagos distintos; cada análisis llega hasta el</span>
+<span class="c">-- último mes en que TODAS sus series tienen dato válido (sin valores a futuro ni sospechosos).</span>
+<span class="c">-- El privado no registrado va aparte: el INDEC lo publica con 5 meses de rezago y acá se</span>
+<span class="c">-- fecha en el mes que mide, así que termina antes que el resto de los salarios.</span>
+<span class="c">-- =====================================================================</span>
+<span class="k">WITH</span> alcance (analisis, grupo, solo_serie, sin_serie) <span class="k">AS</span> (
+    <span class="k">VALUES</span>
+        (<span class="s">&#x27;Salario real: total, registrados, privado y público&#x27;</span>, <span class="s">&#x27;salario_indice&#x27;</span>, NULL, <span class="s">&#x27;sal_no_registrado&#x27;</span>),
+        (<span class="s">&#x27;Salario real: total, registrados, privado y público&#x27;</span>, <span class="s">&#x27;ipc_region&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Salario real: privado no registrado&#x27;</span>, <span class="s">&#x27;salario_indice&#x27;</span>, <span class="s">&#x27;sal_no_registrado&#x27;</span>, NULL),
+        (<span class="s">&#x27;Salario real: privado no registrado&#x27;</span>, <span class="s">&#x27;ipc_region&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Inflación, rubros y regiones&#x27;</span>, <span class="s">&#x27;ipc_region&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Inflación, rubros y regiones&#x27;</span>, <span class="s">&#x27;ipc_categoria&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Inflación, rubros y regiones&#x27;</span>, <span class="s">&#x27;ipc_rubro&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Poder de compra en canastas&#x27;</span>, <span class="s">&#x27;ingreso_pesos&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Poder de compra en canastas&#x27;</span>, <span class="s">&#x27;canasta&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Salario en dólares&#x27;</span>, <span class="s">&#x27;ingreso_pesos&#x27;</span>, NULL, NULL),
+        (<span class="s">&#x27;Salario en dólares&#x27;</span>, <span class="s">&#x27;tipo_cambio&#x27;</span>, NULL, NULL)
+)
+<span class="k">SELECT</span>
+    a.analisis,
+    <span class="f">MIN</span>(c.hasta) <span class="k">AS</span> vale_hasta,
+    <span class="f">GROUP_CONCAT</span>(<span class="k">DISTINCT</span> c.grupo) <span class="k">AS</span> grupos,
+    <span class="f">MAX</span>(c.meses_de_rezago) <span class="k">AS</span> rezago_maximo_meses
+<span class="k">FROM</span> alcance <span class="k">AS</span> a
+<span class="k">JOIN</span> v_cobertura <span class="k">AS</span> c
+    <span class="k">ON</span> c.grupo = a.grupo
+    <span class="k">AND</span> (a.solo_serie <span class="k">IS NULL</span> <span class="k">OR</span> c.serie_id = a.solo_serie)
+    <span class="k">AND</span> (a.sin_serie <span class="k">IS NULL</span> <span class="k">OR</span> c.serie_id &lt;&gt; a.sin_serie)
+<span class="k">GROUP BY</span> a.analisis
+<span class="k">ORDER BY</span> vale_hasta, a.analisis;</code></pre>
+    </details>
+    <details class="tabla-detalle">
+  <summary>Resultado (5 filas)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Resultado (5 filas): ¿Hasta qué mes vale cada conclusión?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Análisis</th>
+          <th scope="col">Vale hasta</th>
+          <th scope="col">Rezago máx. (meses)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="">Salario real: privado no registrado</td>
+          <td class="">feb‑2026</td>
+          <td class="num">8</td>
+        </tr>
+        <tr>
+          <td class="">Poder de compra en canastas</td>
+          <td class="">jul‑2026</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td class="">Salario en dólares</td>
+          <td class="">jul‑2026</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td class="">Salario real: total, registrados, privado y público</td>
+          <td class="">jul‑2026</td>
+          <td class="num">3</td>
+        </tr>
+        <tr>
+          <td class="">Inflación, rubros y regiones</td>
+          <td class="">sep‑2026</td>
+          <td class="num">1</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </article>
+</section>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor pie__fila">
+      <div>
+        <p class="pie__titulo">InflationArg</p>
+        <p>Proyecto de portfolio de <a href="/InflationArg/sobre-mi/">Juan Barros</a>. Código <a href="https://github.com/JuanMBF/InflationArg">en GitHub</a> con licencia MIT.</p>
+      </div>
+      <div>
+        <p>Datos: INDEC, BCRA, ANSES y MTEySS vía <a href="https://datos.gob.ar">datos.gob.ar</a> (CC BY 4.0), descargados el 21/10/2026.</p>
+        <p>Sin cookies ni rastreadores.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

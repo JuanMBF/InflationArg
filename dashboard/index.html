@@ -1,0 +1,973 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard interactivo · InflationArg</title>
+  <meta name="description" content="Salario real, inflación, rubros, canastas, regiones y salario en dólares en gráficos interactivos.">
+  <meta name="author" content="Juan Barros">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f7f7f4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#121211" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://juanmbf.github.io/InflationArg/dashboard/">  <meta property="og:type" content="website">
+  <meta property="og:locale" content="es_AR">
+  <meta property="og:site_name" content="InflationArg">
+  <meta property="og:title" content="Dashboard interactivo">
+  <meta property="og:description" content="Salario real, inflación, rubros, canastas, regiones y salario en dólares en gráficos interactivos.">
+  <meta property="og:url" content="https://juanmbf.github.io/InflationArg/dashboard/">
+  <meta property="og:image" content="https://juanmbf.github.io/InflationArg/static/img/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="¿Le ganaron los salarios a la inflación? Gráfico de salario real por sector, Argentina 2016–2026.">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/InflationArg/static/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/InflationArg/static/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="/InflationArg/static/css/estilos.css">
+  <script>
+    (function () {
+      document.documentElement.classList.add("js");
+      try {
+        var t = localStorage.getItem("tema");
+        if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t);
+      } catch (e) {}
+    })();
+  </script>
+  <script src="/InflationArg/static/js/tema.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js" integrity="sha384-C2iskrW/uPW46KzOjrvJIQo4YkV8lkD+QS0CrDN18IIPIpT/g2USu8bTP3nvmIAD" crossorigin="anonymous" defer></script>
+  <script src="/InflationArg/static/js/graficos.js" defer></script>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+  <header class="cabecera">
+    <div class="contenedor cabecera__fila">
+      <a class="marca" href="/InflationArg/" aria-label="InflationArg, inicio">
+        <svg class="marca__logo" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <rect width="32" height="32" rx="8" fill="currentColor"/>
+          <path d="M7 22 L13 15 L18 19 L25 10" fill="none" stroke="var(--fondo)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span>InflationArg</span>
+      </a>
+      <button class="menu-boton" type="button" aria-expanded="false" aria-controls="navegacion">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <span class="sr">Menú</span>
+      </button>
+      <nav id="navegacion" class="nav" aria-label="Principal">
+        <ul>
+          <li><a href="/InflationArg/">Inicio</a></li>
+          <li><a href="/InflationArg/dashboard/" aria-current="page">Dashboard</a></li>
+          <li><a href="/InflationArg/calculadora/">Calculadora</a></li>
+          <li><a href="/InflationArg/sql/">SQL</a></li>
+          <li><a href="/InflationArg/metodologia/">Metodología y QA</a></li>
+          <li><a href="/InflationArg/sobre-mi/">Sobre mí</a></li>
+        </ul>
+      </nav>
+      <button class="tema-boton" type="button" aria-label="Cambiar a modo oscuro" title="Cambiar tema">
+        <svg class="icono-sol" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <svg class="icono-luna" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="contenido" tabindex="-1">
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">Dashboard interactivo</p>
+    <h1>Salarios, precios y poder de compra</h1>
+    <p class="bajada">Siete vistas de los mismos datos. Pasá el dedo o el mouse por los gráficos para ver cada mes; cada gráfico tiene su tabla y sale de una consulta SQL.</p>
+    <nav class="chips" aria-label="Secciones del dashboard">
+      <a href="#salario-real">Salario real</a>
+      <a href="#inflacion">Inflación</a>
+      <a href="#categorias">Núcleo y regulados</a>
+      <a href="#rubros">Rubros</a>
+      <a href="#canastas">Canastas</a>
+      <a href="#regiones">Regiones</a>
+      <a href="#dolares">En dólares</a>
+    </nav>
+  </div>
+</section>
+
+<div class="contenedor tablero">
+  <section class="tarjeta" id="salario-real" aria-labelledby="t-salario-real">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-salario-real">1. Salario real por sector</h2>
+      <p class="nota">Índice de salarios (INDEC) ÷ IPC nacional; 100 = poder de compra del mes base. Hasta jul‑2026; el privado no registrado, hasta feb‑2026: el INDEC lo publica con cinco meses de rezago y acá se fecha en el mes que mide.</p>
+      <div class="control-base">
+        <label for="base-salario">Comparar contra</label>
+        <select id="base-salario" autocomplete="off">
+          <option value="2016-12">diciembre de 2016</option>
+          <option value="2017-12">diciembre de 2017</option>
+          <option value="2018-12">diciembre de 2018</option>
+          <option value="2019-12">diciembre de 2019</option>
+          <option value="2020-12">diciembre de 2020</option>
+          <option value="2021-12">diciembre de 2021</option>
+          <option value="2022-12">diciembre de 2022</option>
+          <option value="2023-12">diciembre de 2023</option>
+          <option value="2024-12">diciembre de 2024</option>
+          <option value="2025-12">diciembre de 2025</option>
+        </select>
+      </div>
+      <p class="lectura lectura--dinamica" id="lectura-base" aria-live="polite">Desde dic‑2016: perdieron todos los sectores, pero no por igual: el sector público quedó −34,3 % y el privado no registrado, −6,0 % (a feb‑2026). El peor momento del salario total fue mar‑2024.</p>
+    </div>
+    <div class="grafico" id="g-salario-real" data-grafico="salario_real" role="img" aria-label="Salario real por sector, dic-2016 = 100. Perdieron todos los sectores, pero no por igual: el sector público quedó −34,3 % y el privado no registrado, −6,0 % (a feb-2026).">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: qué sector salió mejor y peor parado cada año (var. real %)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: qué sector salió mejor y peor parado cada año (var. real %): ¿Qué sector salió mejor y cuál peor parado frente a la inflación cada año?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Año</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Privado registrado %</th>
+          <th scope="col">Público %</th>
+          <th scope="col">No registrado %</th>
+          <th scope="col">Total %</th>
+          <th scope="col">Mejor sector</th>
+          <th scope="col">Peor sector</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">2017</td>
+          <td class="">dic‑2017</td>
+          <td class="num">2,03</td>
+          <td class="num">0,15</td>
+          <td class="num neg">-1,23</td>
+          <td class="num">2,15</td>
+          <td class="">Privado registrado</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2018</td>
+          <td class="">dic‑2018</td>
+          <td class="num neg">-11,67</td>
+          <td class="num neg">-11,77</td>
+          <td class="num neg">-10,58</td>
+          <td class="num neg">-12,16</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2019</td>
+          <td class="">dic‑2019</td>
+          <td class="num neg">-6,20</td>
+          <td class="num neg">-7,12</td>
+          <td class="num neg">-14,11</td>
+          <td class="num neg">-8,41</td>
+          <td class="">Privado registrado</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2020</td>
+          <td class="">dic‑2020</td>
+          <td class="num neg">-1,31</td>
+          <td class="num neg">-6,85</td>
+          <td class="num">3,10</td>
+          <td class="num neg">-2,32</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2021</td>
+          <td class="">dic‑2021</td>
+          <td class="num">2,87</td>
+          <td class="num">5,10</td>
+          <td class="num">1,27</td>
+          <td class="num">1,60</td>
+          <td class="">Sector público</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2022</td>
+          <td class="">dic‑2022</td>
+          <td class="num neg">-0,53</td>
+          <td class="num">2,35</td>
+          <td class="num neg">-8,91</td>
+          <td class="num neg">-2,28</td>
+          <td class="">Sector público</td>
+          <td class="">Privado no registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2023</td>
+          <td class="">dic‑2023</td>
+          <td class="num neg">-14,65</td>
+          <td class="num neg">-20,18</td>
+          <td class="num neg">-18,04</td>
+          <td class="num neg">-18,86</td>
+          <td class="">Privado registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2024</td>
+          <td class="">dic‑2024</td>
+          <td class="num">13,66</td>
+          <td class="num">0,70</td>
+          <td class="num">22,65</td>
+          <td class="num">12,72</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Sector público</td>
+        </tr>
+        <tr>
+          <td class="num">2025</td>
+          <td class="">dic‑2025</td>
+          <td class="num neg">-2,13</td>
+          <td class="num neg">-2,00</td>
+          <td class="num">26,39</td>
+          <td class="num">5,08</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Privado registrado</td>
+        </tr>
+        <tr>
+          <td class="num">2026</td>
+          <td class="">feb‑2026</td>
+          <td class="num neg">-2,02</td>
+          <td class="num neg">-1,59</td>
+          <td class="num">2,49</td>
+          <td class="num neg">-0,79</td>
+          <td class="">Privado no registrado</td>
+          <td class="">Privado registrado</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+
+  <section class="tarjeta" id="inflacion" aria-labelledby="t-inflacion">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-inflacion">2. Inflación mensual e interanual</h2>
+      <p class="lectura">El pico mensual fue 25,5 % en dic‑2023; el interanual, 289,4 % en abr‑2024. En sep‑2026: 1,9 % mensual.</p>
+      <div class="segmentado" role="group" aria-label="Medida de inflación">
+        <button type="button" data-control="inflacion" data-valor="mensual" aria-pressed="true" data-aria="Inflación mensual del IPC nacional desde enero de 2017. Pico de 25,5 % en dic-2023.">Mensual</button>
+        <button type="button" data-control="inflacion" data-valor="interanual" aria-pressed="false" data-aria="Inflación interanual del IPC nacional desde diciembre de 2017. Pico de 289,4 % en abr-2024.">Interanual</button>
+      </div>
+    </div>
+    <div class="grafico" id="g-inflacion" data-grafico="inflacion" role="img" aria-label="Inflación mensual del IPC nacional desde enero de 2017. Pico de 25,5 % en dic-2023.">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: los 10 meses de mayor inflación</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: los 10 meses de mayor inflación: ¿Cuáles fueron los meses de mayor inflación desde 2017?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Puesto</th>
+          <th scope="col">Mes</th>
+          <th scope="col">Mensual %</th>
+          <th scope="col">Interanual %</th>
+          <th scope="col">Puesto interanual</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="">dic‑2023</td>
+          <td class="num">25,47</td>
+          <td class="num">211,41</td>
+          <td class="num">9</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td class="">ene‑2024</td>
+          <td class="num">20,61</td>
+          <td class="num">254,25</td>
+          <td class="num">7</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td class="">feb‑2024</td>
+          <td class="num">13,24</td>
+          <td class="num">276,22</td>
+          <td class="num">4</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td class="">nov‑2023</td>
+          <td class="num">12,81</td>
+          <td class="num">160,92</td>
+          <td class="num">13</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td class="">sep‑2023</td>
+          <td class="num">12,75</td>
+          <td class="num">138,28</td>
+          <td class="num">15</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td class="">ago‑2023</td>
+          <td class="num">12,44</td>
+          <td class="num">124,37</td>
+          <td class="num">16</td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <td class="">mar‑2024</td>
+          <td class="num">11,01</td>
+          <td class="num">287,87</td>
+          <td class="num">2</td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <td class="">abr‑2024</td>
+          <td class="num">8,83</td>
+          <td class="num">289,40</td>
+          <td class="num">1</td>
+        </tr>
+        <tr>
+          <td class="num">9</td>
+          <td class="">abr‑2023</td>
+          <td class="num">8,40</td>
+          <td class="num">108,83</td>
+          <td class="num">21</td>
+        </tr>
+        <tr>
+          <td class="num">10</td>
+          <td class="">oct‑2023</td>
+          <td class="num">8,30</td>
+          <td class="num">142,66</td>
+          <td class="num">14</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+
+  <section class="tarjeta" id="categorias" aria-labelledby="t-categorias">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-categorias">3. Núcleo, regulados y estacionales</h2>
+      <p class="lectura">Inflación interanual por categoría. Cuando los regulados (tarifas, combustibles, prepagas) van por encima del núcleo, la suba viene de precios que fija o autoriza el Estado.</p>
+    </div>
+    <div class="grafico" id="g-categorias" data-grafico="categorias" role="img" aria-label="Inflación interanual del nivel general, núcleo, regulados y estacionales.">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: inflación anual por categoría (dic. contra dic.)</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: inflación anual por categoría (dic. contra dic.): ¿Cuánta inflación hubo cada año y qué la empujó: núcleo, regulados o estacionales?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Año</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Nivel general %</th>
+          <th scope="col">Núcleo %</th>
+          <th scope="col">Regulados %</th>
+          <th scope="col">Estacionales %</th>
+          <th scope="col">Regulados − núcleo (pp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">2017</td>
+          <td class="">dic‑2017</td>
+          <td class="num">24,80</td>
+          <td class="num">21,13</td>
+          <td class="num">38,70</td>
+          <td class="num">21,46</td>
+          <td class="num">17,57</td>
+        </tr>
+        <tr>
+          <td class="num">2018</td>
+          <td class="">dic‑2018</td>
+          <td class="num">47,65</td>
+          <td class="num">47,72</td>
+          <td class="num">53,46</td>
+          <td class="num">35,24</td>
+          <td class="num">5,74</td>
+        </tr>
+        <tr>
+          <td class="num">2019</td>
+          <td class="">dic‑2019</td>
+          <td class="num">53,83</td>
+          <td class="num">56,66</td>
+          <td class="num">48,22</td>
+          <td class="num">48,95</td>
+          <td class="num">-8,43</td>
+        </tr>
+        <tr>
+          <td class="num">2020</td>
+          <td class="">dic‑2020</td>
+          <td class="num">36,14</td>
+          <td class="num">39,40</td>
+          <td class="num">14,76</td>
+          <td class="num">64,39</td>
+          <td class="num">-24,64</td>
+        </tr>
+        <tr>
+          <td class="num">2021</td>
+          <td class="">dic‑2021</td>
+          <td class="num">50,94</td>
+          <td class="num">54,87</td>
+          <td class="num">37,72</td>
+          <td class="num">50,08</td>
+          <td class="num">-17,15</td>
+        </tr>
+        <tr>
+          <td class="num">2022</td>
+          <td class="">dic‑2022</td>
+          <td class="num">94,79</td>
+          <td class="num">90,62</td>
+          <td class="num">85,67</td>
+          <td class="num">134,12</td>
+          <td class="num">-4,95</td>
+        </tr>
+        <tr>
+          <td class="num">2023</td>
+          <td class="">dic‑2023</td>
+          <td class="num">211,41</td>
+          <td class="num">229,41</td>
+          <td class="num">164,94</td>
+          <td class="num">178,98</td>
+          <td class="num">-64,46</td>
+        </tr>
+        <tr>
+          <td class="num">2024</td>
+          <td class="">dic‑2024</td>
+          <td class="num">117,76</td>
+          <td class="num">105,50</td>
+          <td class="num">205,88</td>
+          <td class="num">87,32</td>
+          <td class="num">100,38</td>
+        </tr>
+        <tr>
+          <td class="num">2025</td>
+          <td class="">dic‑2025</td>
+          <td class="num">31,55</td>
+          <td class="num">33,09</td>
+          <td class="num">34,21</td>
+          <td class="num">16,95</td>
+          <td class="num">1,12</td>
+        </tr>
+        <tr>
+          <td class="num">2026</td>
+          <td class="">sep‑2026</td>
+          <td class="num">23,64</td>
+          <td class="num">21,77</td>
+          <td class="num">31,47</td>
+          <td class="num">20,29</td>
+          <td class="num">9,71</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+
+  <section class="tarjeta" id="rubros" aria-labelledby="t-rubros">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-rubros">4. Rubros del IPC</h2>
+      <p class="lectura">Desde dic‑2016, los precios de restaurantes y hoteles se multiplicaron por 153,6 y los de prendas de vestir y calzado, por 83,3. En el último año encabeza vivienda, agua, electricidad y combustibles.</p>
+      <div class="segmentado" role="group" aria-label="Período de los rubros">
+        <button type="button" data-control="rubros" data-valor="acumulado" aria-pressed="true" data-aria="Ranking de rubros del IPC por suba acumulada desde diciembre de 2016.">Desde dic‑2016</button>
+        <button type="button" data-control="rubros" data-valor="anio" aria-pressed="false" data-aria="Ranking de rubros del IPC por inflación del último año.">Último año</button>
+      </div>
+    </div>
+    <div class="grafico grafico--alto" id="g-rubros" data-grafico="rubros" role="img" aria-label="Ranking de rubros del IPC por suba acumulada desde diciembre de 2016.">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: ranking de rubros</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: ranking de rubros: ¿Qué rubros del IPC subieron más y cuáles menos?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Puesto</th>
+          <th scope="col">Rubro</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Veces</th>
+          <th scope="col">Acumulado desde dic‑2016 %</th>
+          <th scope="col">Vs. nivel general %</th>
+          <th scope="col">Puesto último año</th>
+          <th scope="col">Último año %</th>
+          <th scope="col">Vs. general (pp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">1</td>
+          <td class="">Restaurantes y hoteles</td>
+          <td class="">sep‑2026</td>
+          <td class="num">153,6</td>
+          <td class="num">15.256,6</td>
+          <td class="num">22,7</td>
+          <td class="num">6</td>
+          <td class="num">34,56</td>
+          <td class="num">1,21</td>
+        </tr>
+        <tr>
+          <td class="num">2</td>
+          <td class="">Vivienda, agua, electricidad y combustibles</td>
+          <td class="">sep‑2026</td>
+          <td class="num">143,2</td>
+          <td class="num">14.221,9</td>
+          <td class="num">14,4</td>
+          <td class="num">1</td>
+          <td class="num">49,10</td>
+          <td class="num">15,74</td>
+        </tr>
+        <tr>
+          <td class="num">3</td>
+          <td class="">Salud</td>
+          <td class="">sep‑2026</td>
+          <td class="num">141,9</td>
+          <td class="num">14.093,0</td>
+          <td class="num">13,4</td>
+          <td class="num">7</td>
+          <td class="num">33,29</td>
+          <td class="num neg">-0,06</td>
+        </tr>
+        <tr>
+          <td class="num">4</td>
+          <td class="">Alimentos y bebidas no alcohólicas</td>
+          <td class="">sep‑2026</td>
+          <td class="num">133,8</td>
+          <td class="num">13.284,2</td>
+          <td class="num">7,0</td>
+          <td class="num">5</td>
+          <td class="num">35,06</td>
+          <td class="num">1,70</td>
+        </tr>
+        <tr>
+          <td class="num">5</td>
+          <td class="">Transporte</td>
+          <td class="">sep‑2026</td>
+          <td class="num">131,6</td>
+          <td class="num">13.063,2</td>
+          <td class="num">5,2</td>
+          <td class="num">4</td>
+          <td class="num">36,22</td>
+          <td class="num">2,87</td>
+        </tr>
+        <tr>
+          <td class="num">6</td>
+          <td class="">Bienes y servicios varios</td>
+          <td class="">sep‑2026</td>
+          <td class="num">121,4</td>
+          <td class="num">12.038,4</td>
+          <td class="num neg">-3,0</td>
+          <td class="num">8</td>
+          <td class="num">32,48</td>
+          <td class="num neg">-0,87</td>
+        </tr>
+        <tr>
+          <td class="num">7</td>
+          <td class="">Educación</td>
+          <td class="">sep‑2026</td>
+          <td class="num">118,6</td>
+          <td class="num">11.764,2</td>
+          <td class="num neg">-5,2</td>
+          <td class="num">2</td>
+          <td class="num">39,86</td>
+          <td class="num">6,50</td>
+        </tr>
+        <tr>
+          <td class="num">8</td>
+          <td class="">Comunicación</td>
+          <td class="">sep‑2026</td>
+          <td class="num">117,4</td>
+          <td class="num">11.636,6</td>
+          <td class="num neg">-6,2</td>
+          <td class="num">3</td>
+          <td class="num">37,27</td>
+          <td class="num">3,91</td>
+        </tr>
+        <tr>
+          <td class="num">9</td>
+          <td class="">Recreación y cultura</td>
+          <td class="">sep‑2026</td>
+          <td class="num">112,9</td>
+          <td class="num">11.190,2</td>
+          <td class="num neg">-9,8</td>
+          <td class="num">9</td>
+          <td class="num">32,17</td>
+          <td class="num neg">-1,19</td>
+        </tr>
+        <tr>
+          <td class="num">10</td>
+          <td class="">Equipamiento y mantenimiento del hogar</td>
+          <td class="">sep‑2026</td>
+          <td class="num">99,6</td>
+          <td class="num">9.855,2</td>
+          <td class="num neg">-20,4</td>
+          <td class="num">10</td>
+          <td class="num">23,69</td>
+          <td class="num neg">-9,67</td>
+        </tr>
+        <tr>
+          <td class="num">11</td>
+          <td class="">Bebidas alcohólicas y tabaco</td>
+          <td class="">sep‑2026</td>
+          <td class="num">86,2</td>
+          <td class="num">8.522,1</td>
+          <td class="num neg">-31,1</td>
+          <td class="num">11</td>
+          <td class="num">22,44</td>
+          <td class="num neg">-10,92</td>
+        </tr>
+        <tr>
+          <td class="num">12</td>
+          <td class="">Prendas de vestir y calzado</td>
+          <td class="">sep‑2026</td>
+          <td class="num">83,3</td>
+          <td class="num">8.232,3</td>
+          <td class="num neg">-33,4</td>
+          <td class="num">12</td>
+          <td class="num">10,31</td>
+          <td class="num neg">-23,05</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+
+  <section class="tarjeta" id="canastas" aria-labelledby="t-canastas">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-canastas">5. ¿Cuántas canastas compra cada ingreso?</h2>
+      <p class="lectura">Canastas Básicas Totales (CBT, adulto equivalente, GBA) que compra cada ingreso bruto. Debajo de 1, ese ingreso no alcanza para que una persona adulta sola supere la línea de pobreza.</p>
+      <p class="nota">Hasta jul‑2026. El dato de RIPTE de ago‑2026 quedó en cuarentena por la QA: repite exacto el valor de jun‑2026.</p>
+    </div>
+    <div class="grafico" id="g-canastas" data-grafico="poder_compra" role="img" aria-label="Canastas básicas totales que compran el RIPTE, el salario mínimo y la jubilación mínima.">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: canastas por ingreso, diciembre de cada año</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: canastas por ingreso, diciembre de cada año: ¿Cuántas Canastas Básicas Totales compran el salario promedio (RIPTE), el salario mínimo y la jubilación mínima?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Mes</th>
+          <th scope="col">CBT ($)</th>
+          <th scope="col">CBT por RIPTE</th>
+          <th scope="col">CBT por salario mínimo</th>
+          <th scope="col">CBT por jubilación mínima</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="">dic‑2016</td>
+          <td class="num">4.258</td>
+          <td class="num">4,86</td>
+          <td class="num">1,78</td>
+          <td class="num">1,33</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2017</td>
+          <td class="num">5.397</td>
+          <td class="num">4,87</td>
+          <td class="num">1,64</td>
+          <td class="num">1,34</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2018</td>
+          <td class="num">8.250</td>
+          <td class="num">4,16</td>
+          <td class="num">1,37</td>
+          <td class="num">1,13</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2019</td>
+          <td class="num">12.609</td>
+          <td class="num">3,93</td>
+          <td class="num">1,34</td>
+          <td class="num">1,12</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2020</td>
+          <td class="num">17.543</td>
+          <td class="num">3,81</td>
+          <td class="num">1,17</td>
+          <td class="num">1,09</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2021</td>
+          <td class="num">24.643</td>
+          <td class="num">4,16</td>
+          <td class="num">1,30</td>
+          <td class="num">1,18</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2022</td>
+          <td class="num">49.358</td>
+          <td class="num">3,93</td>
+          <td class="num">1,26</td>
+          <td class="num">1,02</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2023</td>
+          <td class="num">160.453</td>
+          <td class="num">3,02</td>
+          <td class="num">0,97</td>
+          <td class="num">0,66</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2024</td>
+          <td class="num">331.532</td>
+          <td class="num">3,63</td>
+          <td class="num">0,84</td>
+          <td class="num">0,78</td>
+        </tr>
+        <tr>
+          <td class="">dic‑2025</td>
+          <td class="num">423.532</td>
+          <td class="num">3,86</td>
+          <td class="num">0,79</td>
+          <td class="num">0,80</td>
+        </tr>
+        <tr>
+          <td class="">jul‑2026</td>
+          <td class="num">506.381</td>
+          <td class="num">3,84</td>
+          <td class="num">0,74</td>
+          <td class="num">0,81</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+
+  <section class="tarjeta" id="regiones" aria-labelledby="t-regiones">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-regiones">6. Inflación por región</h2>
+      <p class="lectura">Inflación interanual del último mes por región del INDEC. La barra gris es el total país.</p>
+    </div>
+    <div class="grafico" id="g-regiones" data-grafico="regiones" role="img" aria-label="Inflación interanual por región en el último mes disponible.">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: inflación acumulada e interanual por región</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: inflación acumulada e interanual por región: ¿En qué región del país subieron más los precios?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Serie</th>
+          <th scope="col">Hasta</th>
+          <th scope="col">Acumulado desde dic‑2016 %</th>
+          <th scope="col">Puesto</th>
+          <th scope="col">Interanual %</th>
+          <th scope="col">Puesto interanual</th>
+          <th scope="col">Vs. país (pp)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="">Total país</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.414,2</td>
+          <td class="num">5</td>
+          <td class="num">33,35</td>
+          <td class="num">4</td>
+          <td class="num">0,00</td>
+        </tr>
+        <tr>
+          <td class="">Noroeste (NOA)</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.531,5</td>
+          <td class="num">1</td>
+          <td class="num">33,59</td>
+          <td class="num">2</td>
+          <td class="num">0,23</td>
+        </tr>
+        <tr>
+          <td class="">Noreste (NEA)</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.515,4</td>
+          <td class="num">2</td>
+          <td class="num">36,86</td>
+          <td class="num">1</td>
+          <td class="num">3,51</td>
+        </tr>
+        <tr>
+          <td class="">Cuyo</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.491,9</td>
+          <td class="num">3</td>
+          <td class="num">33,03</td>
+          <td class="num">6</td>
+          <td class="num neg">-0,33</td>
+        </tr>
+        <tr>
+          <td class="">GBA</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.423,2</td>
+          <td class="num">4</td>
+          <td class="num">33,54</td>
+          <td class="num">3</td>
+          <td class="num">0,19</td>
+        </tr>
+        <tr>
+          <td class="">Pampeana</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.363,8</td>
+          <td class="num">6</td>
+          <td class="num">33,06</td>
+          <td class="num">5</td>
+          <td class="num neg">-0,29</td>
+        </tr>
+        <tr>
+          <td class="">Patagonia</td>
+          <td class="">sep‑2026</td>
+          <td class="num">12.334,5</td>
+          <td class="num">7</td>
+          <td class="num">30,29</td>
+          <td class="num">7</td>
+          <td class="num neg">-3,06</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+
+  <section class="tarjeta" id="dolares" aria-labelledby="t-dolares">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-dolares">7. Ingresos en dólares oficiales</h2>
+      <p class="lectura">RIPTE, salario mínimo y jubilación mínima divididos por el tipo de cambio oficial de valuación del BCRA de cada mes.</p>
+    </div>
+    <div class="grafico" id="g-dolares" data-grafico="usd" role="img" aria-label="Ingresos en dólares al tipo de cambio oficial, por mes.">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+
+    <details class="tabla-detalle">
+  <summary>Tabla: promedio anual en dólares</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="Tabla: promedio anual en dólares: ¿Cuánto vale el salario en dólares oficiales y cómo cambió?">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Año</th>
+          <th scope="col">Meses</th>
+          <th scope="col">RIPTE (US$)</th>
+          <th scope="col">Salario mínimo (US$)</th>
+          <th scope="col">Jubilación mínima (US$)</th>
+          <th scope="col">Tipo de cambio ($/US$)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="num">2017</td>
+          <td class="num">12</td>
+          <td class="num">1.442</td>
+          <td class="num">511</td>
+          <td class="num">396</td>
+          <td class="num">16,55</td>
+        </tr>
+        <tr>
+          <td class="num">2018</td>
+          <td class="num">12</td>
+          <td class="num">1.137</td>
+          <td class="num">378</td>
+          <td class="num">303</td>
+          <td class="num">28,08</td>
+        </tr>
+        <tr>
+          <td class="num">2019</td>
+          <td class="num">12</td>
+          <td class="num">896</td>
+          <td class="num">287</td>
+          <td class="num">239</td>
+          <td class="num">48,19</td>
+        </tr>
+        <tr>
+          <td class="num">2020</td>
+          <td class="num">12</td>
+          <td class="num">851</td>
+          <td class="num">249</td>
+          <td class="num">236</td>
+          <td class="num">70,62</td>
+        </tr>
+        <tr>
+          <td class="num">2021</td>
+          <td class="num">12</td>
+          <td class="num">905</td>
+          <td class="num">278</td>
+          <td class="num">241</td>
+          <td class="num">95,07</td>
+        </tr>
+        <tr>
+          <td class="num">2022</td>
+          <td class="num">12</td>
+          <td class="num">1.125</td>
+          <td class="num">342</td>
+          <td class="num">287</td>
+          <td class="num">130,54</td>
+        </tr>
+        <tr>
+          <td class="num">2023</td>
+          <td class="num">12</td>
+          <td class="num">1.140</td>
+          <td class="num">356</td>
+          <td class="num">253</td>
+          <td class="num">295,60</td>
+        </tr>
+        <tr>
+          <td class="num">2024</td>
+          <td class="num">12</td>
+          <td class="num">1.003</td>
+          <td class="num">256</td>
+          <td class="num">211</td>
+          <td class="num">916,15</td>
+        </tr>
+        <tr>
+          <td class="num">2025</td>
+          <td class="num">12</td>
+          <td class="num">1.187</td>
+          <td class="num">253</td>
+          <td class="num">246</td>
+          <td class="num">1.244,52</td>
+        </tr>
+        <tr>
+          <td class="num">2026</td>
+          <td class="num">7</td>
+          <td class="num">1.275</td>
+          <td class="num">251</td>
+          <td class="num">268</td>
+          <td class="num">1.424,20</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+</details>
+
+  </section>
+</div>
+  </main>
+
+  <footer class="pie">
+    <div class="contenedor pie__fila">
+      <div>
+        <p class="pie__titulo">InflationArg</p>
+        <p>Proyecto de portfolio de <a href="/InflationArg/sobre-mi/">Juan Barros</a>. Código <a href="https://github.com/JuanMBF/InflationArg">en GitHub</a> con licencia MIT.</p>
+      </div>
+      <div>
+        <p>Datos: INDEC, BCRA, ANSES y MTEySS vía <a href="https://datos.gob.ar">datos.gob.ar</a> (CC BY 4.0), descargados el 21/10/2026.</p>
+        <p>Sin cookies ni rastreadores.</p>
+      </div>
+    </div>
+  </footer>
+<script type="application/json" id="datos-graficos">{"salario_real":{"fechas":["2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"],"series":{"sal_no_registrado":[100.0,98.82,100.57,102.56,101.21,100.4,101.89,103.0,102.22,101.51,101.81,102.78,98.77,95.91,96.34,96.55,97.27,96.91,98.37,99.85,98.64,94.98,92.53,90.79,88.32,85.99,85.81,84.08,82.39,81.62,81.26,83.76,83.9,81.77,81.9,79.1,75.86,75.31,76.96,77.25,77.89,78.36,82.34,81.78,81.59,81.58,81.97,80.62,78.21,76.05,75.18,73.56,71.26,72.87,73.7,75.73,75.8,74.78,76.3,79.68,79.2,79.75,78.44,77.47,78.87,77.43,78.27,73.26,73.1,73.74,73.55,73.5,72.15,73.15,73.41,74.0,73.35,71.4,73.01,73.9,73.11,68.55,69.46,66.36,59.13,53.54,54.41,54.2,54.96,56.8,58.73,60.32,62.87,65.58,67.12,70.56,72.53,77.27,78.16,79.9,82.19,84.4,84.46,83.0,85.03,87.15,89.17,91.1,91.67,93.06,93.95,null,null,null,null,null],"sal_privado":[100.0,101.74,100.94,100.04,100.73,101.28,101.87,104.89,104.91,104.16,104.42,104.46,102.03,101.98,100.37,99.47,100.22,100.59,98.31,97.61,96.63,92.83,91.45,90.93,90.12,90.68,89.79,88.84,88.26,89.26,89.2,91.02,90.0,87.23,87.64,86.39,84.54,89.74,92.03,91.1,89.55,87.98,86.16,85.64,85.1,84.55,85.84,85.41,83.43,83.42,84.68,83.99,84.53,84.68,83.51,85.27,86.0,86.05,86.21,87.85,85.82,86.45,85.77,84.72,84.36,85.9,85.71,84.1,85.02,84.74,83.91,85.85,85.37,84.22,84.43,84.59,83.39,83.68,83.48,86.97,83.79,84.15,84.48,82.33,72.87,72.49,73.02,72.34,74.43,76.93,78.48,80.17,80.84,81.07,82.07,82.75,82.82,82.89,82.82,81.57,81.37,81.75,81.84,82.06,82.36,81.79,81.58,81.3,81.06,80.46,79.42,78.4,79.48,79.37,79.41,79.51],"sal_publico":[100.0,98.74,97.11,98.69,99.34,99.23,100.7,101.72,102.9,102.93,103.15,102.79,100.15,98.81,97.13,97.59,96.44,95.98,93.75,93.57,92.75,90.1,89.49,88.47,88.36,88.09,87.07,87.74,86.5,85.97,85.42,88.8,86.92,85.01,84.78,82.73,82.07,82.44,83.12,83.79,83.01,82.18,81.06,80.4,78.89,79.17,78.69,77.64,76.44,75.26,75.44,77.4,75.53,75.2,75.81,78.04,78.63,80.97,81.09,81.25,80.34,79.6,77.83,81.76,79.15,80.34,79.81,79.75,77.71,78.85,78.58,79.17,82.23,80.58,78.48,84.77,81.39,81.91,81.96,87.34,82.34,81.03,81.66,78.06,65.64,60.99,62.0,62.01,61.26,63.66,63.27,64.91,65.21,65.49,66.54,66.73,66.09,65.26,66.58,66.29,65.96,67.11,66.89,67.14,67.74,67.12,66.82,65.96,64.77,64.09,63.74,64.77,64.61,64.2,65.17,65.71],"sal_registrado":[100.0,100.63,99.53,99.54,100.22,100.52,101.44,103.72,104.17,103.71,103.95,103.85,101.33,100.81,99.16,98.77,98.82,98.88,96.62,96.12,95.19,91.82,90.72,90.01,89.47,89.72,88.78,88.44,87.61,88.04,87.8,90.2,88.85,86.41,86.58,85.03,83.62,87.03,88.72,88.38,87.12,85.82,84.27,83.69,82.79,82.55,83.18,82.52,80.84,80.38,81.24,81.54,81.18,81.15,80.65,82.58,83.26,84.16,84.31,85.4,83.79,83.9,82.82,83.62,82.42,83.84,83.52,82.48,82.3,82.55,81.93,83.37,84.21,82.86,82.22,84.66,82.65,83.03,82.92,87.11,83.26,82.99,83.44,80.75,70.18,68.21,68.92,68.5,69.53,71.99,72.82,74.49,75.02,75.27,76.29,76.79,76.6,76.33,76.78,75.88,75.64,76.3,76.28,76.51,76.92,76.33,76.09,75.6,74.99,74.37,73.58,73.33,73.95,73.72,74.11,74.38],"sal_total":[100.0,99.96,99.23,99.74,100.56,100.72,101.29,103.54,104.51,104.02,104.02,104.21,102.15,101.49,99.93,99.5,99.46,98.92,96.17,95.72,94.74,91.52,90.01,89.81,89.73,89.89,88.92,88.3,87.27,87.07,86.46,88.59,87.3,84.65,84.61,83.08,82.18,85.19,86.72,86.47,85.34,83.98,82.63,82.51,81.95,81.68,81.94,82.05,80.28,79.68,80.26,80.41,79.74,79.37,78.69,80.15,80.71,81.06,81.46,82.58,81.56,81.47,80.26,80.75,79.93,80.81,80.47,79.07,78.74,79.16,78.26,79.6,79.71,78.72,78.25,80.02,78.01,77.8,77.89,81.31,77.82,77.08,77.1,74.54,64.67,62.44,62.48,62.06,62.81,65.31,66.32,68.51,69.48,70.31,71.61,72.61,72.9,73.41,74.44,73.89,74.33,75.41,76.42,76.86,77.83,77.94,78.06,77.53,76.6,76.35,76.0,76.01,76.87,76.92,77.68,78.21]}},"inflacion":{"fechas":["2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"series":{"mensual":[1.59,2.07,2.37,2.66,1.43,1.19,1.73,1.4,1.9,1.51,1.38,3.14,1.76,2.42,2.34,2.74,2.08,3.74,3.1,3.89,6.53,5.39,3.15,2.57,2.91,3.77,4.68,3.44,3.06,2.72,2.2,3.95,5.89,3.29,4.25,3.74,2.25,2.01,3.34,1.5,1.54,2.24,1.93,2.7,2.84,3.76,3.16,4.01,4.05,3.57,4.81,4.08,3.32,3.17,3.0,2.47,3.55,3.52,2.53,3.84,3.88,4.69,6.73,6.05,5.05,5.3,7.41,6.97,6.17,6.35,4.92,5.12,6.03,6.63,7.68,8.4,7.77,5.95,6.34,12.44,12.75,8.3,12.81,25.47,20.61,13.24,11.01,8.83,4.18,4.58,4.03,4.17,3.47,2.69,2.43,2.7,2.21,2.4,3.73,2.78,1.5,1.62,1.9,1.88,2.08,2.34,2.47,2.85,2.88,2.9,3.38,2.58,2.15,1.89,2.11,1.66,1.93],"interanual":[null,null,null,null,null,null,null,null,null,null,null,24.8,25.01,25.44,25.4,25.5,26.29,29.47,31.21,34.43,40.54,45.91,48.47,47.65,49.31,51.28,54.73,55.8,57.3,55.75,54.39,54.48,53.54,50.49,52.09,53.83,52.86,50.27,48.36,45.56,43.42,42.76,42.39,40.67,36.62,37.24,35.8,36.14,38.53,40.65,42.65,46.28,48.84,50.2,51.77,51.42,52.47,52.11,51.18,50.94,50.69,52.32,55.11,58.04,60.68,63.98,71.0,78.52,83.03,88.04,92.41,94.79,98.83,102.5,104.3,108.83,114.25,115.58,113.45,124.37,138.28,142.66,160.92,211.41,254.25,276.22,287.87,289.4,276.41,271.53,263.45,236.72,209.0,192.99,166.03,117.76,84.54,66.87,55.93,47.26,43.48,39.42,36.57,33.56,31.76,31.31,31.37,31.55,32.41,33.05,32.61,32.35,33.2,33.55,33.83,33.54,33.35]}},"categorias":{"fechas":["2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"series":{"ipc_estacionales":[null,null,null,null,null,null,null,null,null,null,null,null,21.46,22.62,21.03,20.12,17.35,19.37,22.23,26.25,27.33,27.33,32.07,33.76,35.24,33.18,36.67,40.9,41.92,39.28,38.08,37.9,40.5,46.67,41.98,47.93,48.95,52.69,53.57,53.78,58.66,65.07,68.79,64.4,64.59,63.58,74.29,65.68,64.39,63.4,64.37,67.9,63.62,58.62,52.17,58.1,52.95,50.8,48.83,46.61,50.08,58.87,67.03,65.52,70.82,73.95,84.5,95.79,111.52,122.21,124.08,132.09,134.12,131.69,120.82,127.34,142.91,149.07,137.95,124.7,128.8,134.86,131.78,151.17,178.98,200.41,215.99,221.23,213.52,217.04,225.16,225.07,198.27,167.7,152.14,120.83,87.32,61.77,47.61,44.02,33.46,21.14,15.73,14.6,11.99,11.18,12.75,14.61,16.95,23.19,22.62,14.26,12.09,19.26,23.55,24.12,24.03,24.93],"ipc_nacional":[null,null,null,null,null,null,null,null,null,null,null,null,24.8,25.01,25.44,25.4,25.5,26.29,29.47,31.21,34.43,40.54,45.91,48.47,47.65,49.31,51.28,54.73,55.8,57.3,55.75,54.39,54.48,53.54,50.49,52.09,53.83,52.86,50.27,48.36,45.56,43.42,42.76,42.39,40.67,36.62,37.24,35.8,36.14,38.53,40.65,42.65,46.28,48.84,50.2,51.77,51.42,52.47,52.11,51.18,50.94,50.69,52.32,55.11,58.04,60.68,63.98,71.0,78.52,83.03,88.04,92.41,94.79,98.83,102.5,104.3,108.83,114.25,115.58,113.45,124.37,138.28,142.66,160.92,211.41,254.25,276.22,287.87,289.4,276.41,271.53,263.45,236.72,209.0,192.99,166.03,117.76,84.54,66.87,55.93,47.26,43.48,39.42,36.57,33.56,31.76,31.31,31.37,31.55,32.41,33.05,32.61,32.35,33.2,33.55,33.83,33.54,33.35],"ipc_nucleo":[null,null,null,null,null,null,null,null,null,null,null,null,21.13,21.12,21.61,22.38,22.4,23.6,26.94,28.72,31.16,38.91,43.33,46.18,47.72,49.91,52.5,55.48,57.97,58.78,56.73,55.14,57.07,55.32,54.22,55.24,56.66,55.8,53.59,51.45,48.46,46.19,45.6,46.15,43.91,38.34,37.88,37.82,39.4,41.41,43.74,45.7,49.77,52.54,54.47,55.37,55.52,56.96,56.57,55.53,54.87,53.95,54.52,57.28,60.52,63.19,65.51,72.24,78.37,82.26,86.41,89.12,90.62,94.4,100.43,101.96,105.17,110.31,113.13,111.48,125.31,142.22,149.7,170.32,229.41,275.88,291.94,299.99,292.23,277.29,267.23,257.88,227.47,198.12,181.98,155.4,105.5,75.04,60.43,51.31,46.92,44.74,42.04,38.88,36.11,34.31,33.4,33.3,33.09,33.39,33.59,33.59,32.39,32.0,31.82,32.21,31.91,31.62],"ipc_regulados":[null,null,null,null,null,null,null,null,null,null,null,null,38.7,39.12,40.16,37.71,39.3,38.36,41.17,41.58,48.15,52.5,61.15,63.2,53.46,55.4,54.52,58.87,55.9,61.12,60.88,59.65,53.52,51.54,43.9,45.34,48.22,44.94,40.05,37.89,32.61,27.75,25.21,23.63,22.29,20.6,19.97,16.95,14.76,19.31,21.03,22.47,27.64,32.57,35.82,37.07,37.24,38.63,39.21,38.98,37.72,34.59,35.84,40.93,41.46,44.06,46.91,51.92,59.68,62.14,70.87,79.66,85.67,93.51,97.34,97.08,98.94,105.26,109.01,112.62,116.59,124.39,122.74,130.76,164.94,213.11,260.65,293.42,344.05,323.63,327.08,317.52,308.32,294.05,279.55,257.09,205.88,147.98,109.51,83.05,57.35,53.26,44.99,42.17,37.85,35.35,35.17,34.32,34.21,33.97,36.5,38.98,42.96,44.49,44.58,44.33,43.72,43.31]}},"regiones":{"fechas":["2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07","2026-08","2026-09"],"series":{"cuyo":[null,null,null,null,null,null,null,null,null,null,null,null,25.53,25.28,26.64,26.08,26.11,26.24,29.55,32.39,35.06,41.83,47.72,50.77,49.53,51.64,53.33,56.81,56.8,58.45,56.89,55.62,57.09,55.6,52.33,53.59,54.74,54.12,51.91,50.0,47.02,44.83,44.41,43.65,41.34,38.32,38.24,36.43,37.77,40.38,42.83,44.52,48.62,51.98,53.78,55.14,53.76,52.73,51.91,51.18,50.64,50.05,51.96,55.54,58.04,60.45,63.17,69.75,77.55,83.06,88.18,92.35,94.37,98.67,101.15,103.16,105.8,110.2,110.22,108.21,119.7,135.43,138.53,156.34,207.22,253.26,275.82,280.87,284.15,272.71,271.86,265.86,240.42,208.59,193.83,166.15,116.37,80.41,63.14,54.51,46.95,43.23,37.65,34.05,30.96,29.84,29.97,30.84,31.67,32.99,33.94,33.53,32.58,33.16,33.99,34.0,33.4,33.03],"gba":[null,null,null,null,null,null,null,null,null,null,null,null,25.04,25.37,25.51,25.63,25.56,26.36,29.52,30.9,34.23,40.29,45.49,47.96,47.1,48.9,50.71,54.13,55.14,56.81,54.84,53.86,53.57,52.36,49.67,51.39,52.87,51.48,48.57,46.88,44.25,42.13,41.34,40.64,39.19,35.2,35.68,34.25,34.1,35.94,38.3,40.44,44.2,46.83,48.29,50.4,50.12,51.67,51.98,50.94,51.44,52.38,53.79,55.93,59.05,61.21,64.97,71.83,79.11,82.9,87.8,92.82,95.19,99.01,103.06,105.25,109.89,116.26,116.97,114.59,125.24,138.29,142.9,161.19,210.14,249.92,277.09,289.9,292.21,278.94,273.68,266.11,239.62,214.01,197.26,170.13,122.15,89.58,68.57,57.04,47.74,43.77,40.56,37.63,34.63,32.53,31.98,31.83,31.74,32.7,33.19,32.62,32.63,33.65,33.44,33.96,33.66,33.54],"nacional":[null,null,null,null,null,null,null,null,null,null,null,null,24.8,25.01,25.44,25.4,25.5,26.29,29.47,31.21,34.43,40.54,45.91,48.47,47.65,49.31,51.28,54.73,55.8,57.3,55.75,54.39,54.48,53.54,50.49,52.09,53.83,52.86,50.27,48.36,45.56,43.42,42.76,42.39,40.67,36.62,37.24,35.8,36.14,38.53,40.65,42.65,46.28,48.84,50.2,51.77,51.42,52.47,52.11,51.18,50.94,50.69,52.32,55.11,58.04,60.68,63.98,71.0,78.52,83.03,88.04,92.41,94.79,98.83,102.5,104.3,108.83,114.25,115.58,113.45,124.37,138.28,142.66,160.92,211.41,254.25,276.22,287.87,289.4,276.41,271.53,263.45,236.72,209.0,192.99,166.03,117.76,84.54,66.87,55.93,47.26,43.48,39.42,36.57,33.56,31.76,31.31,31.37,31.55,32.41,33.05,32.61,32.35,33.2,33.55,33.83,33.54,33.35],"nea":[null,null,null,null,null,null,null,null,null,null,null,null,22.28,22.67,23.03,23.02,23.52,24.29,26.41,29.08,32.69,40.57,45.25,47.4,47.84,49.92,53.53,57.6,58.92,59.27,58.99,56.6,57.32,55.67,53.35,55.24,57.55,57.04,53.58,51.14,49.15,47.51,46.63,47.12,44.13,40.35,40.95,40.12,42.22,43.91,46.12,45.91,48.76,50.95,51.76,52.91,53.5,52.65,52.32,51.29,49.66,48.38,50.05,55.74,58.57,61.83,65.08,72.24,80.43,87.47,92.37,95.28,95.98,100.19,105.53,103.61,108.06,112.06,115.46,113.1,126.08,139.01,141.64,160.82,219.47,261.38,271.89,286.23,278.91,266.35,258.7,253.12,222.77,195.08,181.8,154.21,103.85,74.81,60.65,50.14,45.02,41.58,37.08,33.27,29.85,28.0,27.53,28.28,28.84,30.54,32.13,33.43,33.52,35.34,36.5,36.9,36.99,36.86],"noa":[null,null,null,null,null,null,null,null,null,null,null,null,24.31,24.65,24.61,24.47,24.61,25.57,28.62,31.17,34.67,40.24,44.97,47.85,47.79,49.72,52.91,55.54,56.75,59.15,58.26,56.05,56.31,56.1,52.45,53.32,55.45,54.28,50.74,49.18,47.69,44.56,43.7,43.58,41.38,36.69,38.3,37.3,38.12,42.27,44.32,44.87,46.85,49.12,50.69,51.96,51.71,53.1,51.82,51.16,50.77,48.66,50.91,54.65,58.17,61.71,64.76,71.15,79.89,84.91,90.44,93.97,95.13,99.43,104.07,105.16,107.72,112.46,115.25,113.91,125.98,140.96,144.22,161.15,212.47,257.67,272.34,277.29,282.23,268.82,262.38,253.87,226.99,198.8,184.47,159.32,112.7,79.28,64.64,57.93,48.9,44.69,39.8,37.22,33.2,31.62,31.09,31.57,31.43,31.76,33.01,32.52,32.1,33.24,33.83,34.24,34.0,33.59],"pampeana":[null,null,null,null,null,null,null,null,null,null,null,null,24.97,25.07,25.85,25.52,25.7,26.61,30.01,31.74,34.86,40.73,46.4,48.8,47.64,49.09,50.91,54.72,55.93,57.06,55.69,54.05,54.23,53.81,50.41,52.18,54.14,53.59,51.6,49.46,46.29,44.31,43.91,43.79,42.09,37.87,38.62,37.14,37.89,40.74,42.39,44.85,48.4,50.84,51.89,52.98,52.44,53.19,52.28,51.45,50.47,49.36,51.12,53.72,56.53,59.63,62.59,69.94,77.69,82.59,87.43,91.31,94.18,98.35,101.54,103.8,108.96,113.73,115.22,113.05,123.65,137.98,142.84,161.53,212.85,257.47,276.09,288.15,288.95,275.72,271.64,262.89,235.95,206.65,190.4,162.91,114.44,81.08,65.89,54.46,46.01,42.57,37.91,35.33,32.64,31.09,30.78,30.99,31.48,32.19,32.85,32.42,31.88,32.44,33.39,33.4,33.12,33.06],"patagonia":[null,null,null,null,null,null,null,null,null,null,null,null,23.46,23.47,23.9,25.08,25.96,26.33,29.04,31.23,33.74,40.7,46.47,50.41,50.58,51.26,52.69,54.43,55.67,57.86,57.1,56.06,56.93,55.01,51.26,51.78,54.04,53.28,51.47,49.01,44.79,42.23,41.06,41.31,39.53,35.57,35.86,33.75,32.29,34.35,37.09,39.03,44.74,47.48,49.69,50.59,51.32,53.49,52.61,51.53,51.63,50.87,52.3,57.26,58.96,61.04,63.59,71.02,76.04,80.08,86.62,91.57,94.25,98.56,100.29,99.41,103.6,108.26,111.62,111.14,122.46,138.94,142.47,158.77,207.72,260.91,279.85,292.27,293.52,283.43,276.88,264.16,239.7,209.11,194.99,172.16,124.74,85.5,72.0,60.86,52.28,47.88,43.47,40.69,37.12,35.36,34.29,33.04,32.93,33.42,33.12,32.05,31.99,32.23,31.97,31.83,31.6,30.29]}},"poder_compra":{"fechas":["2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"],"series":{"ripte":[4.86,4.881,4.855,4.887,4.827,4.852,4.896,5.036,5.007,5.027,5.094,5.047,4.873,4.902,4.835,4.855,4.884,4.814,4.666,4.648,4.587,4.318,4.226,4.135,4.162,4.132,4.117,4.179,4.155,4.167,4.125,4.189,4.127,4.041,4.146,3.994,3.932,4.062,4.272,4.185,4.132,4.093,4.116,4.195,4.129,4.052,4.009,3.913,3.812,3.727,3.852,3.848,3.951,3.906,3.928,4.036,4.084,4.125,4.165,4.205,4.163,4.219,4.145,4.176,4.165,4.141,4.189,4.132,4.015,3.987,3.857,3.9,3.934,3.809,3.814,3.876,4.004,3.968,4.022,4.034,3.734,3.643,3.765,3.538,3.018,2.875,2.768,2.82,3.058,3.192,3.302,3.413,3.394,3.444,3.591,3.638,3.628,3.691,3.827,3.829,3.904,3.975,4.02,4.061,4.074,4.075,4.055,3.961,3.857,3.74,3.834,3.825,3.863,3.814,3.866,3.843],"smvm":[1.776,1.869,1.821,1.768,1.717,1.698,1.682,1.822,1.796,1.772,1.746,1.708,1.642,1.729,1.674,1.643,1.608,1.559,1.498,1.535,1.481,1.466,1.364,1.312,1.37,1.32,1.266,1.343,1.31,1.273,1.24,1.21,1.322,1.388,1.463,1.387,1.338,1.292,1.278,1.242,1.224,1.21,1.19,1.171,1.147,1.104,1.17,1.128,1.174,1.127,1.097,1.096,1.156,1.17,1.174,1.244,1.269,1.363,1.366,1.338,1.299,1.258,1.217,1.137,1.263,1.207,1.35,1.264,1.235,1.234,1.206,1.226,1.255,1.236,1.182,1.123,1.221,1.198,1.17,1.309,1.221,1.141,1.181,1.155,0.972,0.808,0.805,0.81,0.825,0.85,0.829,0.872,0.863,0.859,0.851,0.838,0.844,0.857,0.854,0.834,0.842,0.857,0.858,0.854,0.857,0.845,0.82,0.807,0.79,0.775,0.767,0.759,0.752,0.748,0.742,0.735],"haber_minimo":[1.33,1.313,1.279,1.402,1.363,1.347,1.334,1.315,1.296,1.449,1.428,1.397,1.343,1.319,1.277,1.325,1.296,1.257,1.276,1.243,1.199,1.183,1.101,1.059,1.128,1.088,1.043,1.119,1.091,1.06,1.144,1.115,1.079,1.149,1.121,1.063,1.116,1.077,1.066,1.169,1.153,1.14,1.189,1.17,1.146,1.186,1.122,1.082,1.085,1.042,1.014,1.044,1.01,0.986,1.072,1.055,1.043,1.136,1.107,1.084,1.179,1.142,1.072,1.124,1.058,1.012,1.113,1.042,0.968,1.045,0.959,0.918,1.016,0.947,0.875,0.948,0.891,0.832,0.943,0.88,0.77,0.846,0.783,0.692,0.659,0.547,0.473,0.537,0.639,0.69,0.732,0.74,0.741,0.751,0.765,0.78,0.783,0.795,0.798,0.784,0.796,0.825,0.834,0.832,0.837,0.841,0.831,0.819,0.805,0.793,0.794,0.796,0.8,0.811,0.814,0.814]}},"usd":{"fechas":["2016-12","2017-01","2017-02","2017-03","2017-04","2017-05","2017-06","2017-07","2017-08","2017-09","2017-10","2017-11","2017-12","2018-01","2018-02","2018-03","2018-04","2018-05","2018-06","2018-07","2018-08","2018-09","2018-10","2018-11","2018-12","2019-01","2019-02","2019-03","2019-04","2019-05","2019-06","2019-07","2019-08","2019-09","2019-10","2019-11","2019-12","2020-01","2020-02","2020-03","2020-04","2020-05","2020-06","2020-07","2020-08","2020-09","2020-10","2020-11","2020-12","2021-01","2021-02","2021-03","2021-04","2021-05","2021-06","2021-07","2021-08","2021-09","2021-10","2021-11","2021-12","2022-01","2022-02","2022-03","2022-04","2022-05","2022-06","2022-07","2022-08","2022-09","2022-10","2022-11","2022-12","2023-01","2023-02","2023-03","2023-04","2023-05","2023-06","2023-07","2023-08","2023-09","2023-10","2023-11","2023-12","2024-01","2024-02","2024-03","2024-04","2024-05","2024-06","2024-07","2024-08","2024-09","2024-10","2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"],"series":{"ripte":[1306.0,1324.0,1379.0,1435.0,1476.0,1467.0,1459.0,1428.0,1418.0,1459.0,1480.0,1497.0,1484.0,1416.0,1382.0,1387.0,1424.0,1245.0,1112.0,1095.0,1037.0,818.0,895.0,928.0,906.0,946.0,958.0,944.0,920.0,912.0,950.0,1020.0,840.0,804.0,817.0,814.0,828.0,885.0,919.0,899.0,867.0,843.0,839.0,847.0,830.0,823.0,835.0,821.0,809.0,793.0,815.0,832.0,868.0,866.0,887.0,918.0,929.0,958.0,983.0,1003.0,1007.0,1033.0,1057.0,1108.0,1135.0,1134.0,1152.0,1159.0,1150.0,1156.0,1149.0,1136.0,1126.0,1107.0,1138.0,1182.0,1221.0,1211.0,1218.0,1222.0,1070.0,1076.0,1202.0,1265.0,764.0,679.0,742.0,830.0,944.0,993.0,1033.0,1077.0,1095.0,1118.0,1168.0,1177.0,1177.0,1184.0,1238.0,1276.0,1247.0,1243.0,1243.0,1193.0,1152.0,1107.0,1108.0,1128.0,1129.0,1136.0,1231.0,1272.0,1330.0,1325.0,1321.0,1308.0],"smvm":[477.0,507.0,517.0,519.0,525.0,514.0,501.0,517.0,508.0,514.0,507.0,507.0,500.0,500.0,478.0,470.0,469.0,403.0,357.0,361.0,335.0,278.0,289.0,294.0,298.0,302.0,295.0,303.0,290.0,279.0,285.0,294.0,269.0,276.0,288.0,283.0,282.0,281.0,275.0,267.0,257.0,249.0,243.0,236.0,230.0,224.0,244.0,237.0,249.0,240.0,232.0,237.0,254.0,259.0,265.0,283.0,289.0,317.0,323.0,319.0,314.0,308.0,310.0,302.0,344.0,331.0,371.0,355.0,354.0,358.0,359.0,357.0,359.0,359.0,353.0,343.0,372.0,366.0,354.0,397.0,350.0,337.0,377.0,413.0,246.0,191.0,216.0,238.0,255.0,264.0,259.0,275.0,278.0,279.0,277.0,271.0,274.0,275.0,276.0,278.0,269.0,268.0,265.0,251.0,242.0,230.0,224.0,230.0,231.0,235.0,246.0,252.0,259.0,260.0,254.0,250.0],"haber_minimo":[357.0,356.0,363.0,412.0,417.0,407.0,397.0,373.0,367.0,421.0,415.0,414.0,409.0,381.0,365.0,379.0,378.0,325.0,304.0,293.0,271.0,224.0,233.0,238.0,246.0,249.0,243.0,253.0,242.0,232.0,263.0,272.0,220.0,229.0,221.0,217.0,235.0,235.0,229.0,251.0,242.0,235.0,242.0,236.0,230.0,241.0,234.0,227.0,230.0,222.0,215.0,226.0,222.0,219.0,242.0,240.0,237.0,264.0,261.0,258.0,285.0,280.0,273.0,298.0,288.0,277.0,306.0,292.0,277.0,303.0,285.0,267.0,291.0,275.0,261.0,289.0,272.0,254.0,286.0,267.0,221.0,250.0,250.0,247.0,167.0,129.0,127.0,158.0,197.0,215.0,229.0,233.0,239.0,244.0,249.0,252.0,254.0,255.0,258.0,261.0,254.0,258.0,258.0,244.0,237.0,229.0,227.0,233.0,236.0,241.0,255.0,265.0,275.0,282.0,278.0,277.0]}}}</script>
+<script type="application/json" id="datos-consultas">{"01_respuesta_principal":{"columnas":["serie_id","nombre","hasta","indice_real","var_real_pct","maximo","fecha_maximo","minimo","fecha_minimo","distancia_al_maximo_pct","ranking"],"filas":[{"serie_id":"sal_no_registrado","nombre":"Salarios – privado no registrado","hasta":"feb-2026","indice_real":93.95,"var_real_pct":-6.05,"maximo":103.0,"fecha_maximo":"jul-2017","minimo":53.54,"fecha_minimo":"ene-2024","distancia_al_maximo_pct":-8.79,"ranking":1},{"serie_id":"sal_privado","nombre":"Salarios – privado registrado","hasta":"jul-2026","indice_real":79.51,"var_real_pct":-20.49,"maximo":104.91,"fecha_maximo":"ago-2017","minimo":72.34,"fecha_minimo":"mar-2024","distancia_al_maximo_pct":-24.21,"ranking":2},{"serie_id":"sal_total","nombre":"Salarios – total","hasta":"jul-2026","indice_real":78.21,"var_real_pct":-21.79,"maximo":104.51,"fecha_maximo":"ago-2017","minimo":62.06,"fecha_minimo":"mar-2024","distancia_al_maximo_pct":-25.16,"ranking":3},{"serie_id":"sal_registrado","nombre":"Salarios – registrados","hasta":"jul-2026","indice_real":74.38,"var_real_pct":-25.62,"maximo":104.17,"fecha_maximo":"ago-2017","minimo":68.21,"fecha_minimo":"ene-2024","distancia_al_maximo_pct":-28.6,"ranking":4},{"serie_id":"sal_publico","nombre":"Salarios – sector público","hasta":"jul-2026","indice_real":65.71,"var_real_pct":-34.29,"maximo":103.15,"fecha_maximo":"oct-2017","minimo":60.99,"fecha_minimo":"ene-2024","distancia_al_maximo_pct":-36.29,"ranking":5}]},"02_ganadores_por_anio":{"columnas":["anio","hasta","privado_registrado","publico","no_registrado","total","ganador","perdedor"],"filas":[{"anio":2017,"hasta":"dic-2017","privado_registrado":2.03,"publico":0.15,"no_registrado":-1.23,"total":2.15,"ganador":"Salarios – privado registrado","perdedor":"Salarios – privado no registrado"},{"anio":2018,"hasta":"dic-2018","privado_registrado":-11.67,"publico":-11.77,"no_registrado":-10.58,"total":-12.16,"ganador":"Salarios – privado no registrado","perdedor":"Salarios – sector público"},{"anio":2019,"hasta":"dic-2019","privado_registrado":-6.2,"publico":-7.12,"no_registrado":-14.11,"total":-8.41,"ganador":"Salarios – privado registrado","perdedor":"Salarios – privado no registrado"},{"anio":2020,"hasta":"dic-2020","privado_registrado":-1.31,"publico":-6.85,"no_registrado":3.1,"total":-2.32,"ganador":"Salarios – privado no registrado","perdedor":"Salarios – sector público"},{"anio":2021,"hasta":"dic-2021","privado_registrado":2.87,"publico":5.1,"no_registrado":1.27,"total":1.6,"ganador":"Salarios – sector público","perdedor":"Salarios – privado no registrado"},{"anio":2022,"hasta":"dic-2022","privado_registrado":-0.53,"publico":2.35,"no_registrado":-8.91,"total":-2.28,"ganador":"Salarios – sector público","perdedor":"Salarios – privado no registrado"},{"anio":2023,"hasta":"dic-2023","privado_registrado":-14.65,"publico":-20.18,"no_registrado":-18.04,"total":-18.86,"ganador":"Salarios – privado registrado","perdedor":"Salarios – sector público"},{"anio":2024,"hasta":"dic-2024","privado_registrado":13.66,"publico":0.7,"no_registrado":22.65,"total":12.72,"ganador":"Salarios – privado no registrado","perdedor":"Salarios – sector público"},{"anio":2025,"hasta":"dic-2025","privado_registrado":-2.13,"publico":-2.0,"no_registrado":26.39,"total":5.08,"ganador":"Salarios – privado no registrado","perdedor":"Salarios – privado registrado"},{"anio":2026,"hasta":"feb-2026","privado_registrado":-2.02,"publico":-1.59,"no_registrado":2.49,"total":-0.79,"ganador":"Salarios – privado no registrado","perdedor":"Salarios – privado registrado"}]},"03_inflacion_picos":{"columnas":["puesto","mes","inflacion_mensual_pct","inflacion_interanual_pct","puesto_interanual"],"filas":[{"puesto":1,"mes":"dic-2023","inflacion_mensual_pct":25.47,"inflacion_interanual_pct":211.41,"puesto_interanual":9},{"puesto":2,"mes":"ene-2024","inflacion_mensual_pct":20.61,"inflacion_interanual_pct":254.25,"puesto_interanual":7},{"puesto":3,"mes":"feb-2024","inflacion_mensual_pct":13.24,"inflacion_interanual_pct":276.22,"puesto_interanual":4},{"puesto":4,"mes":"nov-2023","inflacion_mensual_pct":12.81,"inflacion_interanual_pct":160.92,"puesto_interanual":13},{"puesto":5,"mes":"sep-2023","inflacion_mensual_pct":12.75,"inflacion_interanual_pct":138.28,"puesto_interanual":15},{"puesto":6,"mes":"ago-2023","inflacion_mensual_pct":12.44,"inflacion_interanual_pct":124.37,"puesto_interanual":16},{"puesto":7,"mes":"mar-2024","inflacion_mensual_pct":11.01,"inflacion_interanual_pct":287.87,"puesto_interanual":2},{"puesto":8,"mes":"abr-2024","inflacion_mensual_pct":8.83,"inflacion_interanual_pct":289.4,"puesto_interanual":1},{"puesto":9,"mes":"abr-2023","inflacion_mensual_pct":8.4,"inflacion_interanual_pct":108.83,"puesto_interanual":21},{"puesto":10,"mes":"oct-2023","inflacion_mensual_pct":8.3,"inflacion_interanual_pct":142.66,"puesto_interanual":14}]},"04_inflacion_anual_por_categoria":{"columnas":["anio","hasta","nivel_general","nucleo","regulados","estacionales","regulados_menos_nucleo"],"filas":[{"anio":2017,"hasta":"dic-2017","nivel_general":24.8,"nucleo":21.13,"regulados":38.7,"estacionales":21.46,"regulados_menos_nucleo":17.57},{"anio":2018,"hasta":"dic-2018","nivel_general":47.65,"nucleo":47.72,"regulados":53.46,"estacionales":35.24,"regulados_menos_nucleo":5.74},{"anio":2019,"hasta":"dic-2019","nivel_general":53.83,"nucleo":56.66,"regulados":48.22,"estacionales":48.95,"regulados_menos_nucleo":-8.43},{"anio":2020,"hasta":"dic-2020","nivel_general":36.14,"nucleo":39.4,"regulados":14.76,"estacionales":64.39,"regulados_menos_nucleo":-24.64},{"anio":2021,"hasta":"dic-2021","nivel_general":50.94,"nucleo":54.87,"regulados":37.72,"estacionales":50.08,"regulados_menos_nucleo":-17.15},{"anio":2022,"hasta":"dic-2022","nivel_general":94.79,"nucleo":90.62,"regulados":85.67,"estacionales":134.12,"regulados_menos_nucleo":-4.95},{"anio":2023,"hasta":"dic-2023","nivel_general":211.41,"nucleo":229.41,"regulados":164.94,"estacionales":178.98,"regulados_menos_nucleo":-64.46},{"anio":2024,"hasta":"dic-2024","nivel_general":117.76,"nucleo":105.5,"regulados":205.88,"estacionales":87.32,"regulados_menos_nucleo":100.38},{"anio":2025,"hasta":"dic-2025","nivel_general":31.55,"nucleo":33.09,"regulados":34.21,"estacionales":16.95,"regulados_menos_nucleo":1.12},{"anio":2026,"hasta":"sep-2026","nivel_general":23.64,"nucleo":21.77,"regulados":31.47,"estacionales":20.29,"regulados_menos_nucleo":9.71}]},"05_rubros_ranking":{"columnas":["puesto_acumulado","rubro","hasta","veces","acumulado_desde_dic2016_pct","acumulado_vs_general_pct","puesto_ultimo_anio","ultimo_anio_pct","ultimo_anio_vs_general_pp"],"filas":[{"puesto_acumulado":1,"rubro":"Restaurantes y hoteles","hasta":"sep-2026","veces":153.6,"acumulado_desde_dic2016_pct":15256.6,"acumulado_vs_general_pct":22.7,"puesto_ultimo_anio":6,"ultimo_anio_pct":34.56,"ultimo_anio_vs_general_pp":1.21},{"puesto_acumulado":2,"rubro":"Vivienda, agua, electricidad y combustibles","hasta":"sep-2026","veces":143.2,"acumulado_desde_dic2016_pct":14221.9,"acumulado_vs_general_pct":14.4,"puesto_ultimo_anio":1,"ultimo_anio_pct":49.1,"ultimo_anio_vs_general_pp":15.74},{"puesto_acumulado":3,"rubro":"Salud","hasta":"sep-2026","veces":141.9,"acumulado_desde_dic2016_pct":14093.0,"acumulado_vs_general_pct":13.4,"puesto_ultimo_anio":7,"ultimo_anio_pct":33.29,"ultimo_anio_vs_general_pp":-0.06},{"puesto_acumulado":4,"rubro":"Alimentos y bebidas no alcohólicas","hasta":"sep-2026","veces":133.8,"acumulado_desde_dic2016_pct":13284.2,"acumulado_vs_general_pct":7.0,"puesto_ultimo_anio":5,"ultimo_anio_pct":35.06,"ultimo_anio_vs_general_pp":1.7},{"puesto_acumulado":5,"rubro":"Transporte","hasta":"sep-2026","veces":131.6,"acumulado_desde_dic2016_pct":13063.2,"acumulado_vs_general_pct":5.2,"puesto_ultimo_anio":4,"ultimo_anio_pct":36.22,"ultimo_anio_vs_general_pp":2.87},{"puesto_acumulado":6,"rubro":"Bienes y servicios varios","hasta":"sep-2026","veces":121.4,"acumulado_desde_dic2016_pct":12038.4,"acumulado_vs_general_pct":-3.0,"puesto_ultimo_anio":8,"ultimo_anio_pct":32.48,"ultimo_anio_vs_general_pp":-0.87},{"puesto_acumulado":7,"rubro":"Educación","hasta":"sep-2026","veces":118.6,"acumulado_desde_dic2016_pct":11764.2,"acumulado_vs_general_pct":-5.2,"puesto_ultimo_anio":2,"ultimo_anio_pct":39.86,"ultimo_anio_vs_general_pp":6.5},{"puesto_acumulado":8,"rubro":"Comunicación","hasta":"sep-2026","veces":117.4,"acumulado_desde_dic2016_pct":11636.6,"acumulado_vs_general_pct":-6.2,"puesto_ultimo_anio":3,"ultimo_anio_pct":37.27,"ultimo_anio_vs_general_pp":3.91},{"puesto_acumulado":9,"rubro":"Recreación y cultura","hasta":"sep-2026","veces":112.9,"acumulado_desde_dic2016_pct":11190.2,"acumulado_vs_general_pct":-9.8,"puesto_ultimo_anio":9,"ultimo_anio_pct":32.17,"ultimo_anio_vs_general_pp":-1.19},{"puesto_acumulado":10,"rubro":"Equipamiento y mantenimiento del hogar","hasta":"sep-2026","veces":99.6,"acumulado_desde_dic2016_pct":9855.2,"acumulado_vs_general_pct":-20.4,"puesto_ultimo_anio":10,"ultimo_anio_pct":23.69,"ultimo_anio_vs_general_pp":-9.67},{"puesto_acumulado":11,"rubro":"Bebidas alcohólicas y tabaco","hasta":"sep-2026","veces":86.2,"acumulado_desde_dic2016_pct":8522.1,"acumulado_vs_general_pct":-31.1,"puesto_ultimo_anio":11,"ultimo_anio_pct":22.44,"ultimo_anio_vs_general_pp":-10.92},{"puesto_acumulado":12,"rubro":"Prendas de vestir y calzado","hasta":"sep-2026","veces":83.3,"acumulado_desde_dic2016_pct":8232.3,"acumulado_vs_general_pct":-33.4,"puesto_ultimo_anio":12,"ultimo_anio_pct":10.31,"ultimo_anio_vs_general_pp":-23.05}]},"06_poder_compra_canastas":{"columnas":["mes","cbt_pesos","cbt_por_ripte","cbt_por_salario_minimo","cbt_por_jubilacion_minima","es_ultimo"],"filas":[{"mes":"dic-2016","cbt_pesos":4257.55,"cbt_por_ripte":4.86,"cbt_por_salario_minimo":1.78,"cbt_por_jubilacion_minima":1.33,"es_ultimo":0},{"mes":"dic-2017","cbt_pesos":5397.23,"cbt_por_ripte":4.87,"cbt_por_salario_minimo":1.64,"cbt_por_jubilacion_minima":1.34,"es_ultimo":0},{"mes":"dic-2018","cbt_pesos":8250.42,"cbt_por_ripte":4.16,"cbt_por_salario_minimo":1.37,"cbt_por_jubilacion_minima":1.13,"es_ultimo":0},{"mes":"dic-2019","cbt_pesos":12608.52,"cbt_por_ripte":3.93,"cbt_por_salario_minimo":1.34,"cbt_por_jubilacion_minima":1.12,"es_ultimo":0},{"mes":"dic-2020","cbt_pesos":17542.89,"cbt_por_ripte":3.81,"cbt_por_salario_minimo":1.17,"cbt_por_jubilacion_minima":1.09,"es_ultimo":0},{"mes":"dic-2021","cbt_pesos":24642.76,"cbt_por_ripte":4.16,"cbt_por_salario_minimo":1.3,"cbt_por_jubilacion_minima":1.18,"es_ultimo":0},{"mes":"dic-2022","cbt_pesos":49357.7,"cbt_por_ripte":3.93,"cbt_por_salario_minimo":1.26,"cbt_por_jubilacion_minima":1.02,"es_ultimo":0},{"mes":"dic-2023","cbt_pesos":160452.53,"cbt_por_ripte":3.02,"cbt_por_salario_minimo":0.97,"cbt_por_jubilacion_minima":0.66,"es_ultimo":0},{"mes":"dic-2024","cbt_pesos":331532.43,"cbt_por_ripte":3.63,"cbt_por_salario_minimo":0.84,"cbt_por_jubilacion_minima":0.78,"es_ultimo":0},{"mes":"dic-2025","cbt_pesos":423531.8,"cbt_por_ripte":3.86,"cbt_por_salario_minimo":0.79,"cbt_por_jubilacion_minima":0.8,"es_ultimo":0},{"mes":"jul-2026","cbt_pesos":506380.55,"cbt_por_ripte":3.84,"cbt_por_salario_minimo":0.74,"cbt_por_jubilacion_minima":0.81,"es_ultimo":1}]},"07_regiones":{"columnas":["region","nombre","hasta","acumulado_desde_dic2016_pct","puesto_acumulado","interanual_pct","puesto_interanual","diferencia_vs_pais_pp"],"filas":[{"region":"nacional","nombre":"IPC nivel general – Total país","hasta":"sep-2026","acumulado_desde_dic2016_pct":12414.2,"puesto_acumulado":5,"interanual_pct":33.35,"puesto_interanual":4,"diferencia_vs_pais_pp":0.0},{"region":"noa","nombre":"IPC nivel general – Noroeste (NOA)","hasta":"sep-2026","acumulado_desde_dic2016_pct":12531.5,"puesto_acumulado":1,"interanual_pct":33.59,"puesto_interanual":2,"diferencia_vs_pais_pp":0.23},{"region":"nea","nombre":"IPC nivel general – Noreste (NEA)","hasta":"sep-2026","acumulado_desde_dic2016_pct":12515.4,"puesto_acumulado":2,"interanual_pct":36.86,"puesto_interanual":1,"diferencia_vs_pais_pp":3.51},{"region":"cuyo","nombre":"IPC nivel general – Cuyo","hasta":"sep-2026","acumulado_desde_dic2016_pct":12491.9,"puesto_acumulado":3,"interanual_pct":33.03,"puesto_interanual":6,"diferencia_vs_pais_pp":-0.33},{"region":"gba","nombre":"IPC nivel general – GBA","hasta":"sep-2026","acumulado_desde_dic2016_pct":12423.2,"puesto_acumulado":4,"interanual_pct":33.54,"puesto_interanual":3,"diferencia_vs_pais_pp":0.19},{"region":"pampeana","nombre":"IPC nivel general – Pampeana","hasta":"sep-2026","acumulado_desde_dic2016_pct":12363.8,"puesto_acumulado":6,"interanual_pct":33.06,"puesto_interanual":5,"diferencia_vs_pais_pp":-0.29},{"region":"patagonia","nombre":"IPC nivel general – Patagonia","hasta":"sep-2026","acumulado_desde_dic2016_pct":12334.5,"puesto_acumulado":7,"interanual_pct":30.29,"puesto_interanual":7,"diferencia_vs_pais_pp":-3.06}]},"08_salario_en_dolares":{"columnas":["anio","meses","ripte_usd","salario_minimo_usd","jubilacion_minima_usd","tipo_cambio_promedio"],"filas":[{"anio":2017,"meses":12,"ripte_usd":1442.0,"salario_minimo_usd":511.0,"jubilacion_minima_usd":396.0,"tipo_cambio_promedio":16.55},{"anio":2018,"meses":12,"ripte_usd":1137.0,"salario_minimo_usd":378.0,"jubilacion_minima_usd":303.0,"tipo_cambio_promedio":28.08},{"anio":2019,"meses":12,"ripte_usd":896.0,"salario_minimo_usd":287.0,"jubilacion_minima_usd":239.0,"tipo_cambio_promedio":48.19},{"anio":2020,"meses":12,"ripte_usd":851.0,"salario_minimo_usd":249.0,"jubilacion_minima_usd":236.0,"tipo_cambio_promedio":70.62},{"anio":2021,"meses":12,"ripte_usd":905.0,"salario_minimo_usd":278.0,"jubilacion_minima_usd":241.0,"tipo_cambio_promedio":95.07},{"anio":2022,"meses":12,"ripte_usd":1125.0,"salario_minimo_usd":342.0,"jubilacion_minima_usd":287.0,"tipo_cambio_promedio":130.54},{"anio":2023,"meses":12,"ripte_usd":1140.0,"salario_minimo_usd":356.0,"jubilacion_minima_usd":253.0,"tipo_cambio_promedio":295.6},{"anio":2024,"meses":12,"ripte_usd":1003.0,"salario_minimo_usd":256.0,"jubilacion_minima_usd":211.0,"tipo_cambio_promedio":916.15},{"anio":2025,"meses":12,"ripte_usd":1187.0,"salario_minimo_usd":253.0,"jubilacion_minima_usd":246.0,"tipo_cambio_promedio":1244.52},{"anio":2026,"meses":7,"ripte_usd":1275.0,"salario_minimo_usd":251.0,"jubilacion_minima_usd":268.0,"tipo_cambio_promedio":1424.2}]},"09_vigencia_de_conclusiones":{"columnas":["analisis","vale_hasta","grupos","rezago_maximo_meses"],"filas":[{"analisis":"Salario real: privado no registrado","vale_hasta":"2026-02-01","grupos":"salario_indice,ipc_region","rezago_maximo_meses":8},{"analisis":"Poder de compra en canastas","vale_hasta":"2026-07-01","grupos":"ingreso_pesos,canasta","rezago_maximo_meses":3},{"analisis":"Salario en dólares","vale_hasta":"2026-07-01","grupos":"ingreso_pesos,tipo_cambio","rezago_maximo_meses":3},{"analisis":"Salario real: total, registrados, privado y público","vale_hasta":"2026-07-01","grupos":"salario_indice,ipc_region","rezago_maximo_meses":3},{"analisis":"Inflación, rubros y regiones","vale_hasta":"2026-09-01","grupos":"ipc_region,ipc_categoria,ipc_rubro","rezago_maximo_meses":1}]}}</script>
+</body>
+</html>
