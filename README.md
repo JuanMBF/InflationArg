@@ -167,7 +167,7 @@ scripts/           imagen Open Graph y capturas del README
 
 **Juan Barros** · Caballito, CABA. Busco mi primer puesto como **Analista de Datos Trainee/Junior** (también QA manual, BI/Reporting y Help Desk N1). Estudio la Tecnicatura en Desarrollo de Software y la Licenciatura en Gestión de TI en UADE; antes trabajé en soporte técnico y mesa de ayuda (UNAB) y en ventas (IDigital, +15 % en ventas cruzadas). SQL, Python, Excel avanzado, MySQL, MongoDB, Git, Docker y testing manual.
 
-[juanmbarrosf@gmail.com](mailto:juanmbarrosf@gmail.com) · [LinkedIn](https://www.linkedin.com/in/barrosjuan0) · [GitHub](https://github.com/JuanMBF) · Otros proyectos: [Portfolio](https://github.com/JuanMBF/Portfolio), [ProyectoDB](https://github.com/JuanMBF/ProyectoDB), [HelpDesk Pro en Python](https://github.com/JuanMBF/python)
+[juanmbarrosf@gmail.com](mailto:juanmbarrosf@gmail.com) · [LinkedIn](https://www.linkedin.com/in/barrosjuan0) · [GitHub](https://github.com/JuanMBF) · **[Portfolio con todos mis proyectos](https://juanmbf.github.io/Portfolio/)** · Repos: [Portfolio](https://github.com/JuanMBF/Portfolio), [ProyectoDB](https://github.com/JuanMBF/ProyectoDB), [HelpDesk Pro en Python](https://github.com/JuanMBF/python)
 
 ## Créditos y licencia
 
