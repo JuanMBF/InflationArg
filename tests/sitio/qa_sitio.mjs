@@ -82,6 +82,10 @@ async function revisarPagina(navegador, origen, ruta, ancho, tema, axeFuente) {
   const nombre = `${ruta.replace(/\/$/, "") || "inicio"} ${ancho}px ${tema}`;
   const { contexto, pagina, errores } = await prepararPagina(navegador, origen, ancho, tema);
   await pagina.goto(origen + BASE + ruta, { waitUntil: "networkidle" });
+  // QA_FUENTE="DejaVu Sans" reproduce las fuentes más anchas de los runners de Ubuntu.
+  if (process.env.QA_FUENTE) {
+    await pagina.addStyleTag({ content: `*{font-family:"${process.env.QA_FUENTE}"!important}` });
+  }
   await pagina.waitForTimeout(300);
 
   if (!soloCapturas) {
