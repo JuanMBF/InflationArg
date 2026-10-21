@@ -1,0 +1,230 @@
+{
+  "_comentario": "Casos compartidos por tests/test_calculadora.py (pytest) y tests/js/calculadora.test.mjs (node). Los valores esperados se calcularon aparte, directo de los CSV oficiales de data/raw, con redondeo half-up a 2 decimales.",
+  "tolerancia": 0.005,
+  "casos": [
+    {
+      "descripcion": "Toda la serie: dic-2016 a sep-2026, sin sector",
+      "entrada": {
+        "sueldo": 100000,
+        "desde": "2016-12"
+      },
+      "esperado": {
+        "desde": "2016-12",
+        "hasta": "2026-09",
+        "inflacion_pct": 12414.15,
+        "sueldo_equivalente": 12514150.8,
+        "sector": null,
+        "actual": null
+      }
+    },
+    {
+      "descripcion": "Último año con sector privado registrado y sueldo actual",
+      "entrada": {
+        "sueldo": 850000,
+        "desde": "2025-09",
+        "sector": "sal_privado",
+        "sueldo_actual": 1100000
+      },
+      "esperado": {
+        "desde": "2025-09",
+        "hasta": "2026-09",
+        "inflacion_pct": 33.35,
+        "sueldo_equivalente": 1133517.02,
+        "sector": {
+          "sector": "sal_privado",
+          "nombre": "Privado registrado",
+          "hasta": "2026-07",
+          "aumento_pct": 25.11,
+          "inflacion_pct": 28.69,
+          "sueldo_segun_sector": 1063441.29,
+          "resultado_real_pct": -2.78
+        },
+        "actual": {
+          "sueldo_actual": 1100000,
+          "diferencia_pesos": -33517.02,
+          "resultado_real_pct": -2.96,
+          "ajuste_para_empatar_pct": 3.05
+        }
+      }
+    },
+    {
+      "descripcion": "Pico inflacionario nov-2023 a abr-2024, sector público",
+      "entrada": {
+        "sueldo": 500000,
+        "desde": "2023-11",
+        "hasta": "2024-04",
+        "sector": "sal_publico"
+      },
+      "esperado": {
+        "desde": "2023-11",
+        "hasta": "2024-04",
+        "inflacion_pct": 107.03,
+        "sueldo_equivalente": 1035173.49,
+        "sector": {
+          "sector": "sal_publico",
+          "nombre": "Público",
+          "hasta": "2024-04",
+          "aumento_pct": 62.47,
+          "inflacion_pct": 107.03,
+          "sueldo_segun_sector": 812337.25,
+          "resultado_real_pct": -21.53
+        },
+        "actual": null
+      }
+    },
+    {
+      "descripcion": "El sector termina antes que el IPC: no registrado hasta su último mes",
+      "entrada": {
+        "sueldo": 1000000,
+        "desde": "2024-01",
+        "sector": "sal_no_registrado",
+        "sueldo_actual": 2500000
+      },
+      "esperado": {
+        "desde": "2024-01",
+        "hasta": "2026-09",
+        "inflacion_pct": 193.65,
+        "sueldo_equivalente": 2936537.76,
+        "sector": {
+          "sector": "sal_no_registrado",
+          "nombre": "Privado no registrado",
+          "hasta": "2026-07",
+          "aumento_pct": 573.58,
+          "inflacion_pct": 183.38,
+          "sueldo_segun_sector": 6735765.43,
+          "resultado_real_pct": 137.69
+        },
+        "actual": {
+          "sueldo_actual": 2500000,
+          "diferencia_pesos": -436537.76,
+          "resultado_real_pct": -14.87,
+          "ajuste_para_empatar_pct": 17.46
+        }
+      }
+    },
+    {
+      "descripcion": "Mismo mes de inicio y fin: inflación cero",
+      "entrada": {
+        "sueldo": 750000,
+        "desde": "2026-03",
+        "hasta": "2026-03",
+        "sector": "sal_total",
+        "sueldo_actual": 750000
+      },
+      "esperado": {
+        "desde": "2026-03",
+        "hasta": "2026-03",
+        "inflacion_pct": 0.0,
+        "sueldo_equivalente": 750000.0,
+        "sector": {
+          "sector": "sal_total",
+          "nombre": "Total",
+          "hasta": "2026-03",
+          "aumento_pct": 0.0,
+          "inflacion_pct": 0.0,
+          "sueldo_segun_sector": 750000.0,
+          "resultado_real_pct": 0.0
+        },
+        "actual": {
+          "sueldo_actual": 750000,
+          "diferencia_pesos": 0.0,
+          "resultado_real_pct": 0.0,
+          "ajuste_para_empatar_pct": 0.0
+        }
+      }
+    },
+    {
+      "descripcion": "Sueldo actual que no alcanza a cubrir la inflación",
+      "entrada": {
+        "sueldo": 400000,
+        "desde": "2020-01",
+        "hasta": "2022-12",
+        "sector": "sal_privado",
+        "sueldo_actual": 1500000
+      },
+      "esperado": {
+        "desde": "2020-01",
+        "hasta": "2022-12",
+        "inflacion_pct": 291.47,
+        "sueldo_equivalente": 1565866.74,
+        "sector": {
+          "sector": "sal_privado",
+          "nombre": "Privado registrado",
+          "hasta": "2022-12",
+          "aumento_pct": 272.43,
+          "inflacion_pct": 291.47,
+          "sueldo_segun_sector": 1489715.99,
+          "resultado_real_pct": -4.86
+        },
+        "actual": {
+          "sueldo_actual": 1500000,
+          "diferencia_pesos": -65866.74,
+          "resultado_real_pct": -4.21,
+          "ajuste_para_empatar_pct": 4.39
+        }
+      }
+    }
+  ],
+  "errores": [
+    {
+      "descripcion": "Sueldo cero",
+      "entrada": {
+        "sueldo": 0,
+        "desde": "2020-01"
+      },
+      "error": "sueldo_invalido"
+    },
+    {
+      "descripcion": "Sueldo negativo",
+      "entrada": {
+        "sueldo": -10,
+        "desde": "2020-01"
+      },
+      "error": "sueldo_invalido"
+    },
+    {
+      "descripcion": "Mes anterior al inicio del IPC",
+      "entrada": {
+        "sueldo": 1000,
+        "desde": "2016-11"
+      },
+      "error": "mes_fuera_de_rango"
+    },
+    {
+      "descripcion": "Mes futuro",
+      "entrada": {
+        "sueldo": 1000,
+        "desde": "2020-01",
+        "hasta": "2030-01"
+      },
+      "error": "mes_fuera_de_rango"
+    },
+    {
+      "descripcion": "Período invertido",
+      "entrada": {
+        "sueldo": 1000,
+        "desde": "2024-05",
+        "hasta": "2023-05"
+      },
+      "error": "periodo_invertido"
+    },
+    {
+      "descripcion": "Sector inexistente",
+      "entrada": {
+        "sueldo": 1000,
+        "desde": "2020-01",
+        "sector": "sal_inventado"
+      },
+      "error": "sector_desconocido"
+    },
+    {
+      "descripcion": "Sueldo actual cero",
+      "entrada": {
+        "sueldo": 1000,
+        "desde": "2020-01",
+        "sueldo_actual": 0
+      },
+      "error": "sueldo_invalido"
+    }
+  ]
+}

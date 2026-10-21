@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block contenido %}
+<section class="cabecera-pagina perfil">
+  <div class="contenedor perfil__fila">
+    <div class="avatar avatar--grande" aria-hidden="true">JB</div>
+    <div>
+      <p class="antetitulo">Caballito, CABA · Español nativo · Inglés B1</p>
+      <h1>Juan Barros</h1>
+      <p class="bajada">Busco mi primer puesto como <strong>Analista de Datos Trainee/Junior</strong>. También me interesan QA manual, BI/Reporting y Help Desk N1.</p>
+      <ul class="contacto">
+        <li><a class="boton boton--primario" href="mailto:juanmbarrosf@gmail.com">juanmbarrosf@gmail.com</a></li>
+        <li><a class="boton" href="https://www.linkedin.com/in/barrosjuan0">LinkedIn</a></li>
+        <li><a class="boton" href="https://github.com/JuanMBF">GitHub</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="muestra-titulo">
+  <h2 id="muestra-titulo">Qué muestra este proyecto</h2>
+  <div class="grilla-habilidades">
+    <div class="habilidad"><h3>SQL</h3><p>Modelo estrella en SQLite, CTEs recursivas, window functions (<code>LAG</code>, <code>RANK</code>, acumulados) y una consulta documentada por pregunta de negocio.</p></div>
+    <div class="habilidad"><h3>Python</h3><p>Pipeline con pandas que corre de punta a punta con un comando, offline y en menos de un minuto, con tests y CI.</p></div>
+    <div class="habilidad"><h3>QA</h3><p>{{ d.qa.resultados|length }} chequeos automáticos de calidad de datos que encontraron {{ d.qa.conteo.alerta }} anomalías reales en fuentes oficiales.</p></div>
+    <div class="habilidad"><h3>Excel y BI</h3><p>Export a Excel con tablas y gráfico nativo, modelo listo para Power BI y este dashboard interactivo.</p></div>
+  </div>
+</section>
+
+<section class="contenedor seccion columnas" aria-label="Trayectoria">
+  <div class="tarjeta texto">
+    <h2>Experiencia</h2>
+    <ol class="linea-tiempo">
+      <li><p class="linea-tiempo__fecha">2024 – hoy</p><h3>Administrador de propiedad turística</h3><p>Gestión de una propiedad en Airbnb y Booking.</p></li>
+      <li><p class="linea-tiempo__fecha">2023 – 2024</p><h3>Vendedor / Encargado · IDigital</h3><p>Aumenté un 15 % las ventas cruzadas.</p></li>
+      <li><p class="linea-tiempo__fecha">2021 – 2023</p><h3>Soporte Técnico / Mesa de Ayuda · UNAB</h3><p>Modalidad remota.</p></li>
+    </ol>
+  </div>
+  <div class="tarjeta texto">
+    <h2>Formación</h2>
+    <ol class="linea-tiempo">
+      <li><p class="linea-tiempo__fecha">2024 – 2027 (est.)</p><h3>Tecnicatura Univ. en Desarrollo de Software · UADE</h3><p>Me faltan dos finales.</p></li>
+      <li><p class="linea-tiempo__fecha">En curso</p><h3>Lic. en Gestión de Tecnologías de la Información · UADE</h3><p>50 % de la carrera aprobada.</p></li>
+    </ol>
+    <h2>Certificaciones</h2>
+    <ul>
+      <li>Full Stack · CoderHouse (2023)</li>
+      <li>Excel Avanzado · Capacitarte (2022)</li>
+      <li>Inglés B1 · Liceo Cultural Británico (2020)</li>
+    </ul>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="skills-titulo">
+  <h2 id="skills-titulo">Herramientas</h2>
+  <ul class="etiquetas">
+    {% for s in ["SQL", "Python", "pandas", "Excel avanzado (tablas dinámicas, macros)", "MySQL", "SQLite", "MongoDB", "Git y GitHub", "Docker", "Testing manual", "Scrum y Kanban"] %}
+    <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="proyectos-titulo">
+  <h2 id="proyectos-titulo">Otros proyectos</h2>
+  <div class="grilla-proyectos">
+    <a class="proyecto" href="https://github.com/JuanMBF/ProyectoDB"><h3>ProyectoDB</h3><p>Scraper de precios de supermercados.</p><span>Ver en GitHub →</span></a>
+    <a class="proyecto" href="https://github.com/JuanMBF/python"><h3>HelpDesk Pro (Python)</h3><p>Sistema de mesa de ayuda escrito en Python.</p><span>Ver en GitHub →</span></a>
+    <a class="proyecto" href="https://github.com/JuanMBF/Portfolio"><h3>Portfolio</h3><p>HelpDesk Pro, Mongo Replica Lab e IT Support Toolkit.</p><span>Ver en GitHub →</span></a>
+  </div>
+</section>
+{% endblock %}

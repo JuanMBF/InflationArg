@@ -1,0 +1,40 @@
+{% macro kpi(valor, etiqueta, contexto, tono="") %}
+<div class="kpi{% if tono %} kpi--{{ tono }}{% endif %}">
+  <p class="kpi__valor">{{ valor }}</p>
+  <p class="kpi__etiqueta">{{ etiqueta }}</p>
+  <p class="kpi__contexto">{{ contexto }}</p>
+</div>
+{% endmacro %}
+
+{% macro grafico(id, tipo, descripcion, alto="") %}
+<div class="grafico{% if alto %} grafico--{{ alto }}{% endif %}" id="{{ id }}" data-grafico="{{ tipo }}" role="img" aria-label="{{ descripcion }}">
+  <p class="grafico__cargando">Cargando gráfico…</p>
+</div>
+<noscript><p class="nota">El gráfico necesita JavaScript; la tabla de abajo tiene los mismos datos.</p></noscript>
+{% endmacro %}
+
+{% macro tabla(consulta, resumen="Ver la tabla", abierta=false) %}
+<details class="tabla-detalle"{% if abierta %} open{% endif %}>
+  <summary>{{ resumen }}</summary>
+  <section class="tabla-scroll" tabindex="0" aria-label="{{ resumen }}: {{ consulta.descripcion.split('Lectura:')[0].removeprefix('Pregunta: ')|trim }}">
+    <table>
+      <thead>
+        <tr>
+          {% for c in consulta.columnas if c not in ocultas %}
+          <th scope="col">{{ c|etiqueta }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in consulta.filas %}
+        <tr>
+          {% for c in consulta.columnas if c not in ocultas %}
+          <td class="{{ f[c]|clase_celda(c) }}">{{ f[c]|celda(c) }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+</details>
+{% endmacro %}

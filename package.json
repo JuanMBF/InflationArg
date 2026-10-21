@@ -1,0 +1,17 @@
+{
+  "name": "inflationarg-site",
+  "private": true,
+  "description": "Tests del sitio: calculadora en JS, validación HTML y auditoría de accesibilidad con Playwright + axe.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/js/*.test.mjs",
+    "validar-html": "html-validate \"build/site/**/*.html\"",
+    "qa-sitio": "node tests/sitio/qa_sitio.mjs"
+  },
+  "devDependencies": {
+    "axe-core": "4.10.3",
+    "echarts": "6.0.0",
+    "html-validate": "9.5.0",
+    "playwright": "1.56.1"
+  }
+}
