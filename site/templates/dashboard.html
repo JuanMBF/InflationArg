@@ -28,8 +28,16 @@
   <section class="tarjeta" id="salario-real" aria-labelledby="t-salario-real">
     <div class="tarjeta__cabecera">
       <h2 id="t-salario-real">1. Salario real por sector</h2>
-      <p class="lectura">{{ t.detalle }} El peor momento fue {{ k.salario_real_total.fecha_minimo }}.</p>
-      <p class="nota">100 = poder de compra de dic-2016. Índice de salarios (INDEC) ÷ IPC nacional. Hasta {{ k.salario_real_total.hasta }}.</p>
+      <p class="nota">Índice de salarios (INDEC) ÷ IPC nacional; 100 = poder de compra del mes base. Hasta {{ k.salario_real_total.hasta }}.</p>
+      <div class="control-base">
+        <label for="base-salario">Comparar contra</label>
+        <select id="base-salario">
+          {% for f in d.graficos.salario_real.fechas if f.endswith("-12") %}
+          <option value="{{ f }}">{{ (f ~ "-01")|mes_largo_iso }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <p class="lectura lectura--dinamica" id="lectura-base" aria-live="polite">Desde dic-2016: {{ t.detalle[0]|lower }}{{ t.detalle[1:] }} El peor momento fue {{ k.salario_real_total.fecha_minimo }}.</p>
     </div>
     {{ grafico("g-salario-real", "salario_real", "Salario real por sector, dic-2016 = 100. " ~ t.detalle) }}
     {{ tabla(c["02_ganadores_por_anio"], "Tabla: quién le ganó a la inflación cada año (var. real %)") }}

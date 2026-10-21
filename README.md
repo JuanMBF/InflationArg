@@ -129,7 +129,7 @@ make sitio   # validación HTML + Playwright y axe en 375/768/1280, claro y oscu
 ### Automatización
 
 - [`ci.yml`](.github/workflows/ci.yml): ruff, pytest (cobertura mínima 90 %), pipeline completo, tests de JS, validación HTML y auditoría de accesibilidad, con las capturas como artefacto.
-- [`pages.yml`](.github/workflows/pages.yml): publica el sitio en cada push a `main` con la foto del repo. **El día 20 de cada mes** baja datos nuevos y corre la QA: si pasa, publica con los datos nuevos; si falla, publica con la foto.
+- [`pages.yml`](.github/workflows/pages.yml): genera el sitio y lo publica en la rama `gh-pages` en cada push a `main`, con la foto del repo. **El día 20 de cada mes** baja datos nuevos y corre la QA: si pasa, publica con los datos nuevos; si falla, publica con la foto.
 
 ## Diccionario de datos
 

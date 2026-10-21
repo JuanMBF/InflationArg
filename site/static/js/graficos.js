@@ -19,7 +19,7 @@
   };
   var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var graficos = [];
-  var estado = { inflacion: "mensual", rubros: "acumulado" };
+  var estado = { inflacion: "mensual", rubros: "acumulado", base: null };
 
   function leerJSON(id) {
     var nodo = document.getElementById(id);
@@ -138,17 +138,45 @@
     };
   }
 
+  // Salario real con otro mes base: recorta la serie desde ese mes y lo lleva a 100.
+  // Mirar desde un punto de partida distinto puede dar vuelta la conclusión.
+  function rebasar(g, mesBase) {
+    var i0 = mesBase ? g.fechas.indexOf(mesBase) : 0;
+    if (i0 < 0) i0 = 0;
+    var series = {};
+    Object.keys(g.series).forEach(function (id) {
+      var base = g.series[id][i0];
+      series[id] = g.series[id].slice(i0).map(function (v) {
+        return v === null || !base ? null : Math.round((v / base) * 10000) / 100;
+      });
+    });
+    return { fechas: g.fechas.slice(i0), series: series };
+  }
+
+  function lecturaBase(datos) {
+    var nodo = document.getElementById("lectura-base");
+    if (!nodo) return;
+    var g = rebasar(datos.graficos.salario_real, estado.base);
+    var ultimo = g.fechas.length - 1;
+    var partes = ["sal_privado", "sal_publico", "sal_no_registrado"].map(function (id) {
+      var v = g.series[id][ultimo] - 100;
+      return NOMBRES[id].toLowerCase() + " " + (v > 0 ? "+" : "") + numero(v, 1).replace("-", "−") + "\u00a0%";
+    });
+    nodo.textContent =
+      "Entre " + etiquetaMes(g.fechas[0]) + " y " + etiquetaMes(g.fechas[ultimo]) + ": " + partes.join(", ") + ".";
+  }
+
   // ------------------------------------------------------------------ gráficos
 
   var constructores = {
     salario_real: function (el, d, c) {
-      var g = d.graficos.salario_real;
+      var g = rebasar(d.graficos.salario_real, estado.base);
       var orden = ["sal_privado", "sal_publico", "sal_no_registrado", "sal_total"];
       var series = orden.map(function (id, i) {
         var esTotal = id === "sal_total";
         return linea(NOMBRES[id], g.series[id], esTotal ? c.texto : c.series[i], {
           lineStyle: { width: esTotal ? 2.5 : 2, color: esTotal ? c.texto : c.series[i], type: esTotal ? "dashed" : "solid" },
-          markLine: i === 0 ? referencia(100, "dic-2016 = 100", c) : undefined,
+          markLine: i === 0 ? referencia(100, etiquetaMes(g.fechas[0]) + " = 100", c) : undefined,
         });
       });
       return base(el, c, {
@@ -320,6 +348,19 @@
       return;
     }
     dibujar(datos);
+
+    var selectorBase = document.getElementById("base-salario");
+    if (selectorBase) {
+      estado.base = selectorBase.value;
+      selectorBase.addEventListener("change", function () {
+        estado.base = selectorBase.value;
+        lecturaBase(datos);
+        var c = colores();
+        graficos.forEach(function (g) {
+          if (g.tipo === "salario_real") g.chart.setOption(constructores.salario_real(g.el, datos, c), true);
+        });
+      });
+    }
 
     document.querySelectorAll("[data-control]").forEach(function (boton) {
       boton.addEventListener("click", function () {

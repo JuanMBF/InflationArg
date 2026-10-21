@@ -179,6 +179,17 @@ async function revisarCalculadora(navegador, origen) {
   if (errores.length) fallar("calculadora: errores de consola: " + errores.join(" | "));
   console.log("  ✓ calculadora: validación y resultado");
 
+  await pagina.goto(origen + BASE + "dashboard/", { waitUntil: "networkidle" });
+  const antes = await pagina.textContent("#lectura-base");
+  await pagina.selectOption("#base-salario", "2023-12");
+  const despues = await pagina.textContent("#lectura-base");
+  if (!antes.startsWith("Desde dic-2016") || !despues.startsWith("Entre dic-2023") || antes === despues) {
+    fallar(`dashboard: el selector de mes base no actualiza la lectura (${antes} → ${despues})`);
+  }
+  const etiqueta = await pagina.locator("#g-salario-real svg text", { hasText: "dic-2023 = 100" }).count();
+  if (!etiqueta) fallar("dashboard: el gráfico no se rebasó al cambiar el mes base");
+  console.log("  ✓ dashboard: selector de mes base");
+
   await pagina.goto(origen + BASE);
   const nav = pagina.locator("#navegacion");
   if (await nav.isVisible()) fallar("menú móvil: la navegación debería empezar cerrada en 375px");
