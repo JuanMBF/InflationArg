@@ -115,6 +115,13 @@ def _celda(valor) -> str:
     return str(valor)
 
 
+def nombre_corto(serie_id: str) -> str:
+    """Nombre legible para los textos del reporte: "ripte" -> "RIPTE", "ipc_noa" -> "IPC Noroeste"."""
+    serie = config.POR_ID[serie_id]
+    nombre = serie.nombre.split(" (")[0].replace("IPC nivel general – ", "IPC ")
+    return f"IPC {nombre.lower()}" if serie.grupo == "ipc_rubro" else nombre
+
+
 def _mes(fecha: str) -> int:
     return int(fecha[:4]) * 12 + int(fecha[5:7])
 
@@ -158,7 +165,7 @@ def chequear_unicidad(stg: pd.DataFrame) -> Resultado:
             "unicidad",
             "Unicidad de fecha + serie",
             "ok",
-            f"{len(stg):,} observaciones, ninguna repetida.".replace(",", "."),
+            f"{numero(len(stg))} observaciones, ninguna repetida.",
         )
     filas = dup.groupby("serie_id").size().reset_index(name="duplicados").to_dict("records")
     return Resultado("unicidad", "Unicidad de fecha + serie", "error", f"{len(dup)} filas duplicadas.", filas)
@@ -272,7 +279,7 @@ def chequear_futuro(stg: pd.DataFrame, fecha_corte: str) -> Resultado:
     )
     filas["desde"] = filas["desde"].map(mes)
     filas["hasta"] = filas["hasta"].map(mes)
-    nombres = ", ".join(filas["serie_id"])
+    nombres = ", ".join(map(nombre_corto, filas["serie_id"]))
     return Resultado(
         "futuro",
         "Valores con fecha futura",
@@ -324,12 +331,17 @@ def chequear_repetidos(marcas: pd.DataFrame) -> Resultado:
         {"serie_id": m.serie_id, "fecha": mes(m.fecha), "valor": m.valor, "motivo": m.motivo}
         for m in marcas.itertuples()
     ]
-    detalle = "; ".join(f"{f['serie_id']} {f['fecha']} {f['motivo']}" for f in filas)
+    detalle = "; ".join(f"{nombre_corto(f['serie_id'])} de {f['fecha']} {f['motivo']}" for f in filas)
     return Resultado(
         "repetidos",
         "Valores repetidos sospechosos",
         "alerta",
-        f"{detalle}. Se cargan con estado 'sospechoso' y las vistas no los usan.",
+        f"{detalle}. "
+        + (
+            "Se carga con estado 'sospechoso' y las vistas no lo usan."
+            if len(filas) == 1
+            else "Se cargan con estado 'sospechoso' y las vistas no los usan."
+        ),
         filas,
     )
 
@@ -384,7 +396,8 @@ def chequear_api(stg: pd.DataFrame, api: pd.DataFrame, fecha_corte: str) -> Resu
     vacias = [f["serie_id"] for f in filas if f["problema"] == "API vacía"]
     detalle = f"{len(filas)} diferencias entre la API y los CSV"
     if vacias:
-        detalle += f"; la API devolvió vacías {len(vacias)} series ({', '.join(vacias)}) que en el CSV están completas"
+        nombres = ", ".join(map(nombre_corto, vacias))
+        detalle += f"; la API devolvió vacías {len(vacias)} series ({nombres}) que en el CSV están completas"
     detalle += ". El pipeline usa siempre los CSV de descarga."
     return Resultado("api_vs_csv", "Consistencia API vs. CSV", "alerta", detalle, filas)
 
@@ -406,7 +419,7 @@ def chequear_frescura(stg: pd.DataFrame, fecha_corte: str) -> Resultado:
         )
     viejas = [f for f in filas if f["rezago_meses"] > f["maximo_esperado"]]
     if viejas:
-        nombres = ", ".join(f["serie_id"] for f in viejas)
+        nombres = ", ".join(nombre_corto(f["serie_id"]) for f in viejas)
         return Resultado("frescura", "Frescura", "alerta", f"Series con más rezago del esperado: {nombres}.", filas)
     return Resultado(
         "frescura",
