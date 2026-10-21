@@ -67,6 +67,9 @@ class Serie:
     region: str = "nacional"
     base: str | None = None
     id_api: str | None = None
+    # Meses de rezago con que se publica la serie: el dato del mes t refleja el mes t - desfase.
+    # El modelo corre la fecha antes de analizar (sql/02_modelo.sql).
+    desfase_meses: int = 0
 
 
 def _catalogo() -> list[Serie]:
@@ -184,6 +187,8 @@ def _catalogo() -> list[Serie]:
                 columna,
                 base=BASE_SALARIOS,
                 id_api=id_api,
+                # El INDEC publica el no registrado con 5 meses de rezago: el valor del mes t mide t - 5.
+                desfase_meses=5 if serie_id == "sal_no_registrado" else 0,
             )
         )
 

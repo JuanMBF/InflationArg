@@ -20,7 +20,7 @@ const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..")
 const SITIO = path.join(RAIZ, "build", "site");
 const CAPTURAS = path.join(RAIZ, "build", "capturas");
 const BASE = "/InflationArg/";
-const ECHARTS_CDN = "https://cdn.jsdelivr.net/npm/echarts@6.0.0/dist/echarts.min.js";
+const ECHARTS_CDN = "https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js";
 const PAGINAS = process.env.PAGINAS ? process.env.PAGINAS.split(",") : ["", "dashboard/", "calculadora/", "sql/", "metodologia/", "sobre-mi/", "no-existe/"];
 const ANCHOS = [375, 768, 1280];
 const TEMAS = ["light", "dark"];
@@ -180,8 +180,20 @@ async function revisarCalculadora(navegador, origen) {
   const texto = await pagina.textContent("#resultado-cuerpo");
   if (!/\$\s?[\d.]+/.test(texto) || !texto.includes("ene-2024")) fallar("calculadora: el resultado no aparece");
   if (await pagina.isVisible("#error")) fallar("calculadora: muestra error con datos válidos");
+  // Mes inicial posterior al último dato del sector: calcula el IPC y avisa (sin error ni veredicto).
+  await pagina.selectOption("#desde", "2026-08");
+  await pagina.fill("#actual", "");
+  await pagina.click("button[type=submit]");
+  const aviso = await pagina.textContent("#resultado-cuerpo");
+  if (await pagina.isVisible("#error") || !aviso.includes("llega hasta") || aviso.includes("le ganaron")) {
+    fallar("calculadora: con un mes inicial sin datos del sector no muestra el ajuste por IPC con el aviso");
+  }
+  // Un error nuevo no puede convivir con el resultado anterior.
+  await pagina.fill("#sueldo", "abc");
+  await pagina.click("button[type=submit]");
+  if ((await pagina.textContent("#resultado-cuerpo")).includes("$")) fallar("calculadora: queda un resultado viejo junto al error");
   if (errores.length) fallar("calculadora: errores de consola: " + errores.join(" | "));
-  console.log("  ✓ calculadora: validación y resultado");
+  console.log("  ✓ calculadora: validación, resultado y avisos");
 
   await pagina.goto(origen + BASE + "dashboard/", { waitUntil: "networkidle" });
   const antes = await pagina.textContent("#lectura-base");

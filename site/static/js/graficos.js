@@ -15,7 +15,7 @@
     ipc_estacionales: "Estacionales",
     ripte: "Salario promedio (RIPTE)",
     smvm: "Salario mínimo",
-    haber_minimo: "Jubilación mínima",
+    haber_minimo: "Jubilación mínima (sin bono)",
   };
   var reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var graficos = [];
@@ -107,12 +107,12 @@
     );
   }
 
-  function tooltipLineas(dec, sufijo) {
+  function tooltipLineas(dec, sufijo, prefijo) {
     return function (items) {
       var filas = items
         .filter(function (i) { return i.value !== null && i.value !== undefined; })
         .map(function (i) {
-          return i.marker + " " + i.seriesName + ": <strong>" + numero(i.value, dec) + sufijo + "</strong>";
+          return i.marker + " " + i.seriesName + ": <strong>" + (prefijo || "") + numero(i.value, dec) + sufijo + "</strong>";
         });
       return "<strong>" + etiquetaMes(items[0].axisValue) + "</strong><br>" + filas.join("<br>");
     };
@@ -158,9 +158,13 @@
     if (!nodo) return;
     var g = rebasar(datos.graficos.salario_real, estado.base);
     var ultimo = g.fechas.length - 1;
+    // Cada sector se lee en su último mes con dato (el no registrado termina antes).
     var partes = ["sal_privado", "sal_publico", "sal_no_registrado"].map(function (id) {
-      var v = g.series[id][ultimo] - 100;
-      return NOMBRES[id].toLowerCase() + " " + (v > 0 ? "+" : "") + numero(v, 1).replace("-", "−") + "\u00a0%";
+      var i = ultimo;
+      while (i > 0 && g.series[id][i] === null) i--;
+      var v = g.series[id][i] - 100;
+      var hasta = i === ultimo ? "" : " (a " + etiquetaMes(g.fechas[i]) + ")";
+      return NOMBRES[id].toLowerCase() + " " + (v > 0 ? "+" : "") + numero(v, 1).replace("-", "−") + "\u00a0%" + hasta;
     });
     nodo.textContent =
       "Entre " + etiquetaMes(g.fechas[0]) + " y " + etiquetaMes(g.fechas[ultimo]) + ": " + partes.join(", ") + ".";
@@ -258,9 +262,13 @@
         series: [{
           type: "bar", data: filas.map(function (f) { return f[campo]; }), barMaxWidth: 22,
           itemStyle: { color: c.series[0], borderRadius: [0, 4, 4, 0] },
-          label: { show: true, position: "right", color: c.texto2, formatter: function (p) { return fmt(p.value); } },
+          // Fondo en las etiquetas y la línea de referencia por debajo: así no se pisan.
+          label: {
+            show: true, position: "right", color: c.texto2, backgroundColor: c.superficie, padding: [1, 3],
+            formatter: function (p) { return fmt(p.value); },
+          },
           markLine: {
-            silent: true, symbol: "none", lineStyle: { color: c.texto, type: "dashed" },
+            z: 1, silent: true, symbol: "none", lineStyle: { color: c.texto, type: "dashed" },
             label: { formatter: "General " + fmt(general), color: c.texto2, position: "end" },
             data: [{ xAxis: general }],
           },
@@ -313,7 +321,7 @@
       var g = d.graficos.usd;
       var orden = ["ripte", "smvm", "haber_minimo"];
       return base(el, c, {
-        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(0, "\u00a0US$") }),
+        tooltip: Object.assign(base(el, c, {}).tooltip, { formatter: tooltipLineas(0, "", "US$\u00a0") }),
         xAxis: ejeMeses(g.fechas, c, el),
         yAxis: ejeValor(c, function (v) { return "US$ " + numero(v, 0); }, { min: 0 }),
         series: orden.map(function (id, i) { return linea(NOMBRES[id], g.series[id], c.series[i]); }),

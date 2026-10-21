@@ -17,13 +17,13 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from markupsafe import Markup
 
-from . import config, formato
+from . import config, formato, qa
 
 SITE_URL = "https://juanmbf.github.io/InflationArg/"
 REPO_URL = "https://github.com/JuanMBF/InflationArg"
 ECHARTS = {
-    "url": "https://cdn.jsdelivr.net/npm/echarts@6.0.0/dist/echarts.min.js",
-    "sri": "sha384-F07Cpw5v8spSU0H113F33m2NQQ/o6GqPTnTjf45ssG4Q6q58ZwhxBiQtIaqvnSpR",
+    "url": "https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js",
+    "sri": "sha384-C2iskrW/uPW46KzOjrvJIQo4YkV8lkD+QS0CrDN18IIPIpT/g2USu8bTP3nvmIAD",
 }
 
 PAGINAS = [
@@ -95,9 +95,16 @@ def resaltar_sql(sql: str) -> Markup:
     return Markup("\n".join(salida))
 
 
+def sin_corte(texto: str) -> str:
+    """Une "dic-2016" con un guion no separable para que el mes no se parta entre líneas."""
+    return re.sub(r"\b([a-z]{3})-(\d{4})\b", "\\1\u2011\\2", texto)
+
+
 def celda(valor, columna: str) -> str:
     if valor is None:
         return "–"
+    if columna == "serie_id" and valor in config.POR_ID:
+        return qa.nombre_corto(valor)
     if isinstance(valor, float):
         if columna in {"cbt_pesos"}:
             return formato.numero(valor, 0)
@@ -146,21 +153,23 @@ def textos(datos: dict) -> dict:
     peor = min(sectores, key=lambda f: f["indice_real"])
     mejor = max(sectores, key=lambda f: f["indice_real"])
     nombre = lambda f: f["nombre"].removeprefix("Salarios – ")  # noqa: E731
+    # Si un sector termina en otro mes que el total (p. ej. el no registrado), se aclara.
+    al = lambda f: f" (a {f['hasta']})" if f["hasta"] != total["hasta"] else ""  # noqa: E731
 
     gano = total["indice_real"] >= 100
     respuesta_corta = "Sí." if gano else "No."
     respuesta_resto = (
-        f"En {_mes_largo(total['hasta'])} el salario promedio compraba "
+        f"En {_mes_largo(total['hasta'])} los salarios compraban "
         f"{formato.porcentaje(abs(total['var_real_pct']), 1)} {'más' if gano else 'menos'} "
         "que en diciembre de 2016."
     )
     detalle = (
         f"Perdieron todos los sectores, pero no por igual: el {nombre(peor)} quedó "
-        f"{formato.porcentaje(peor['var_real_pct'], 1)} y el {nombre(mejor)}, "
-        f"{formato.porcentaje(mejor['var_real_pct'], 1)}."
+        f"{formato.porcentaje(peor['var_real_pct'], 1)}{al(peor)} y el {nombre(mejor)}, "
+        f"{formato.porcentaje(mejor['var_real_pct'], 1)}{al(mejor)}."
         if all(f["indice_real"] < 100 for f in sectores)
-        else f"El {nombre(mejor)} terminó en {formato.porcentaje(mejor['var_real_pct'], 1, signo=True)} "
-        f"y el {nombre(peor)} en {formato.porcentaje(peor['var_real_pct'], 1, signo=True)}."
+        else f"El {nombre(mejor)} terminó en {formato.porcentaje(mejor['var_real_pct'], 1, signo=True)}{al(mejor)} "
+        f"y el {nombre(peor)} en {formato.porcentaje(peor['var_real_pct'], 1, signo=True)}{al(peor)}."
     )
 
     recuperacion = 100 * (total["indice_real"] / total["minimo"] - 1)
@@ -207,7 +216,7 @@ def textos(datos: dict) -> dict:
             "enlace": "dashboard/#inflacion",
         },
         {
-            "titulo": f"{rubros[0]['rubro']} subió más que todo",
+            "titulo": f"{rubros[0]['rubro']}, el rubro que más subió",
             "texto": f"Desde dic-2016 los precios se multiplicaron por {formato.numero(veces_general, 1)} en promedio; "
             f"{rubros[0]['rubro'].lower()}, por {formato.numero(rubros[0]['veces'], 1)} y "
             f"{rubros[-1]['rubro'].lower()}, por {formato.numero(rubros[-1]['veces'], 1)}.",
@@ -217,7 +226,8 @@ def textos(datos: dict) -> dict:
             "titulo": (
                 "El salario mínimo ya no cubre una canasta" if debajo_smvm else "Cuántas canastas compra cada ingreso"
             ),
-            "texto": f"El salario promedio (RIPTE) compraba {formato.numero(canastas['inicio']['cbt_por_ripte'], 2)} "
+            "texto": "El salario promedio bruto (RIPTE) compraba "
+            f"{formato.numero(canastas['inicio']['cbt_por_ripte'], 2)} "
             f"Canastas Básicas Totales en {canastas['inicio']['mes']} y "
             f"{formato.numero(canastas['ultimo']['cbt_por_ripte'], 2)} en {canastas['ultimo']['mes']}. "
             f"El salario mínimo compra {formato.numero(canastas['ultimo']['cbt_por_salario_minimo'], 2)} canastas"
@@ -273,6 +283,7 @@ def _entorno(base: str) -> Environment:
         mes=formato.mes,
         mes_largo=_mes_largo,
         mes_largo_iso=lambda f: formato.mes(f, largo=True),
+        sin_corte=sin_corte,
         celda=celda,
         clase_celda=clase_celda,
         sql=resaltar_sql,

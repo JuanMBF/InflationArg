@@ -36,12 +36,16 @@ FROM stg_valor
 WHERE fecha > (SELECT valor FROM parametro WHERE clave = 'fecha_corte');
 
 -- fact_valor: la ventana de análisis, con el estado que asignó la QA.
+-- Las series que se publican con rezago se fechan en el mes que miden
+-- (fecha de publicación - desfase_meses): así se deflactan con el IPC correcto.
+-- staging y qa_marca quedan con la fecha de publicación, tal como la valida la QA.
 INSERT INTO fact_valor (fecha, serie_id, valor, estado)
 SELECT
-    s.fecha,
+    d.fecha,
     s.serie_id,
     s.valor,
     CASE WHEN m.serie_id IS NULL THEN 'ok' ELSE 'sospechoso' END
 FROM stg_valor AS s
-JOIN dim_fecha AS d ON d.fecha = s.fecha
+JOIN dim_serie AS ds ON ds.serie_id = s.serie_id
+JOIN dim_fecha AS d ON d.fecha = date(s.fecha, '-' || ds.desfase_meses || ' months')
 LEFT JOIN qa_marca AS m ON m.fecha = s.fecha AND m.serie_id = s.serie_id;

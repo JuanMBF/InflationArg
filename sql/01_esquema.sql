@@ -54,7 +54,9 @@ CREATE TABLE dim_serie (
     base     TEXT,
     fuente   TEXT NOT NULL,
     archivo  TEXT NOT NULL,
-    columna  TEXT NOT NULL
+    columna  TEXT NOT NULL,
+    -- Meses de rezago de publicación: el dato fechado t mide el mes t - desfase_meses.
+    desfase_meses INTEGER NOT NULL DEFAULT 0 CHECK (desfase_meses >= 0)
 );
 
 -- Dimensión fecha: un registro por mes calendario (primer día del mes).

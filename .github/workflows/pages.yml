@@ -1,10 +1,11 @@
 name: Publicar sitio
 
 # Genera el sitio y lo publica en la rama gh-pages (GitHub Pages la sirve en
-# https://juanmbf.github.io/InflationArg/).
-# En cada push a main se usa la foto de datos del repo (reproducible).
-# Una vez por mes baja datos nuevos de datos.gob.ar y corre la QA:
-# si pasa, publica con los datos nuevos; si falla, publica con la foto.
+# https://juanmbf.github.io/InflationArg/), en cada push a main y una vez por mes.
+# Siempre intenta bajar datos nuevos de datos.gob.ar y correr la QA: si pasan,
+# publica con los datos nuevos (así un push no vuelve el sitio a la foto vieja);
+# si fallan, publica con la foto del repo y la corrida termina en rojo para avisar.
+# La CI (ci.yml) valida la foto del repo de forma reproducible.
 on:
   push:
     branches: [main]
@@ -31,11 +32,10 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Datos nuevos de datos.gob.ar + QA
         id: online
-        if: github.event_name != 'push'
         continue-on-error: true
         run: python -m inflationarg all --online
       - name: Foto offline del repo
-        if: github.event_name == 'push' || steps.online.outcome != 'success'
+        if: steps.online.outcome != 'success'
         run: python -m inflationarg all
       - name: Resumen de la QA
         run: cat build/qa/reporte.md >> "$GITHUB_STEP_SUMMARY"
@@ -50,3 +50,9 @@ jobs:
           git add -A
           git commit -q -m "Sitio generado desde ${GITHUB_SHA::7} (${{ github.event_name }})"
           git push -q -f "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+      - name: Avisar si falló la descarga online
+        if: steps.online.outcome == 'failure'
+        run: |
+          echo "**La descarga de datos.gob.ar o su QA falló: se publicó la foto del repo.**" >> "$GITHUB_STEP_SUMMARY"
+          echo "::error::La descarga de datos.gob.ar o su QA falló; se publicó la foto del repo"
+          exit 1

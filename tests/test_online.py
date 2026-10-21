@@ -1,19 +1,22 @@
 """Modo online (GitHub Actions) con la red simulada: baja, re-hashea y corre la QA sobre lo nuevo."""
 
 import io
+import urllib.error
 
 import pandas as pd
 
 from inflationarg import config, extract, pipeline
 
 
-def _red_falsa(monkeypatch, modificar_ripte=False):
+def _red_falsa(monkeypatch, modificar_ripte=False, api_caida=False):
     manifiesto = extract.leer_manifiesto()
     por_url = {a["url"]: config.DIR_RAW / a["archivo"] for a in manifiesto["archivos"]}
     pedidos = []
 
     def bajar(url, timeout=60):
         pedidos.append(url)
+        if url.startswith(extract.URL_API) and api_caida:
+            raise urllib.error.HTTPError(url, 503, "Service Unavailable", None, None)
         if url.startswith(extract.URL_API):
             ids = url.split("ids=")[1].split("&")[0].split(",")
             api = pd.read_csv(config.DIR_RAW / config.ARCHIVO_API, dtype={"indice_tiempo": str})
@@ -33,6 +36,7 @@ def test_bajar_todo_escribe_manifiesto_nuevo(monkeypatch, tmp_path):
     assert (tmp_path / config.MANIFIESTO).exists()
     ripte = next(a for a in nuevo["archivos"] if a["archivo"] == "ripte.csv")
     assert ripte["filas"] == 387
+    assert ripte["hasta"] == "2026-09-01"  # el manifiesto nuevo refleja el último dato real
     assert ripte["sha256"] == extract.sha256(tmp_path / "ripte.csv")
     assert sum(u.startswith(extract.URL_API) for u in pedidos) == 2  # 33 series en lotes de 20
     assert "header=ids" in next(u for u in pedidos if u.startswith(extract.URL_API))
@@ -45,3 +49,13 @@ def test_pipeline_online_completo(monkeypatch, tmp_path):
     assert not corrida.reporte.tiene_errores
     api = pd.read_csv(io.StringIO((tmp_path / "raw_online" / config.ARCHIVO_API).read_text()))
     assert len(api.columns) == 1 + len([s for s in config.CATALOGO if s.id_api])
+
+
+def test_si_la_api_falla_la_actualizacion_sigue(monkeypatch, tmp_path):
+    _red_falsa(monkeypatch, api_caida=True)
+    corrida = pipeline.correr_todo(online=True, salida=tmp_path, sitio=False, log=lambda *_: None)
+    assert not corrida.reporte.tiene_errores
+    api = next(r for r in corrida.reporte.resultados if r.chequeo == "api_vs_csv")
+    assert api.nivel == "alerta"
+    manifiesto = extract.leer_manifiesto(tmp_path / "raw_online")
+    assert "503" in next(a for a in manifiesto["archivos"] if a["archivo"] == config.ARCHIVO_API)["error"]

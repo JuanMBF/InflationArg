@@ -7,7 +7,7 @@ WITH cierre AS (
     SELECT
         serie_id,
         anio,
-        etiqueta,
+        fecha,
         var_acumulada_anio,
         ROW_NUMBER() OVER (PARTITION BY serie_id, anio ORDER BY fecha DESC) AS orden
     FROM v_variacion
@@ -16,7 +16,8 @@ WITH cierre AS (
 )
 SELECT
     anio,
-    MAX(etiqueta) AS hasta,
+    (SELECT d.etiqueta FROM dim_fecha AS d
+     WHERE d.fecha = (SELECT MAX(x.fecha) FROM cierre AS x WHERE x.anio = cierre.anio AND x.orden = 1)) AS hasta,
     ROUND(100 * MAX(CASE WHEN serie_id = 'ipc_nacional' THEN var_acumulada_anio END), 2) AS nivel_general,
     ROUND(100 * MAX(CASE WHEN serie_id = 'ipc_nucleo' THEN var_acumulada_anio END), 2) AS nucleo,
     ROUND(100 * MAX(CASE WHEN serie_id = 'ipc_regulados' THEN var_acumulada_anio END), 2) AS regulados,

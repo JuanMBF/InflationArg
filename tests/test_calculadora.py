@@ -45,3 +45,12 @@ def test_indices_exportados_para_js_son_los_mismos(corrida, indices):
     exportado = json.loads((corrida.salida / "datos" / "indices.json").read_text(encoding="utf-8"))
     assert exportado == indices.a_dict()
     assert min(exportado["ipc"]) == "2016-12"
+
+
+@pytest.mark.parametrize("valor", [float("nan"), float("inf"), -float("inf"), True, "1000"])
+def test_montos_no_numericos_o_no_finitos(indices, valor):
+    with pytest.raises(ErrorCalculadora) as error:
+        calcular(indices, valor, "2020-01")
+    assert error.value.codigo == "sueldo_invalido"
+    with pytest.raises(ErrorCalculadora):
+        calcular(indices, 1000, "2020-01", sueldo_actual=valor)
