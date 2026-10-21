@@ -45,7 +45,7 @@ def porcentaje(valor: float | None, decimales: int = 1, signo: bool = False) -> 
     texto = numero(valor, decimales)
     if signo and redondear(valor, decimales) > 0:
         texto = "+" + texto
-    return f"{texto} %".replace("-", "−")
+    return f"{texto}\u00a0%".replace("-", "−")
 
 
 def mes(fecha: str, largo: bool = False) -> str:
