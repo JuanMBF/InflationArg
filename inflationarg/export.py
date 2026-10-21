@@ -94,6 +94,13 @@ def datos_dashboard(con: sqlite3.Connection, consultas: dict, reporte: Reporte) 
             "series": {c: [None if pd.isna(v) else round(float(v), redondeo) for v in df[c]] for c in columnas},
         }
 
+    # El pico interanual sale de toda la serie, no de los 10 picos mensuales.
+    pico_interanual = _registros(
+        q(
+            "SELECT etiqueta AS mes, ROUND(100 * var_interanual, 2) AS inflacion_interanual_pct FROM v_inflacion "
+            "WHERE serie_id = 'ipc_nacional' AND ranking_interanual = 1 ORDER BY fecha LIMIT 1"
+        )
+    )[0]
     principal = consultas["01_respuesta_principal"]["filas"]
     por_sector = {f["serie_id"]: f for f in principal}
     ultima_inflacion = inflacion.iloc[-1]
@@ -116,7 +123,7 @@ def datos_dashboard(con: sqlite3.Connection, consultas: dict, reporte: Reporte) 
             "valor": round(float(ultima_inflacion["interanual"]), 2),
         },
         "pico_mensual": picos[0],
-        "pico_interanual": max(picos, key=lambda f: f["inflacion_interanual_pct"]),
+        "pico_interanual": pico_interanual,
         "canastas_ripte": {"inicio": poder_inicio, "ultimo": poder_ultimo},
         "ripte_usd": {"inicio": usd_anual[0], "ultimo": usd_anual[-1]},
     }
