@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% from "macros.html" import tabla, grafico, kpi %}
+{% block head %}
+  <script src="{{ echarts.url }}" integrity="{{ echarts.sri }}" crossorigin="anonymous" defer></script>
+  <script src="{{ base }}static/js/graficos.js" defer></script>
+{% endblock %}
+{% block contenido %}
+{% set k = d.kpis %}
+<section class="hero">
+  <div class="contenedor">
+    <p class="antetitulo">Análisis de datos · Python + SQL · Argentina 2016–2026</p>
+    <h1>¿Le ganaron los salarios a la inflación?</h1>
+    <p class="respuesta"><strong>{{ t.respuesta_corta }}</strong> {{ t.respuesta_resto }}</p>
+    <p class="hero__detalle">{{ t.detalle }} Datos oficiales de INDEC, BCRA y ANSES, procesados con un pipeline propio y {{ d.meta.observaciones|numero }} observaciones verificadas.</p>
+    <div class="acciones">
+      <a class="boton boton--primario" href="{{ base }}dashboard/">Ver el dashboard</a>
+      <a class="boton" href="{{ base }}calculadora/">Calcular un ajuste de sueldo</a>
+    </div>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="kpis-titulo">
+  <h2 id="kpis-titulo" class="sr">Indicadores principales</h2>
+  <div class="kpis">
+    {{ kpi(k.salario_real_total.var_real_pct|pct(1, true), "Salario real promedio", "total de salarios, " ~ k.salario_real_total.hasta ~ " vs. dic-2016", "neg" if k.salario_real_total.var_real_pct < 0 else "pos") }}
+    {% set peor = t.peor_sector %}
+    {{ kpi(peor.var_real_pct|pct(1, true), "Salario real del " ~ peor.sector, "el sector con peor resultado, " ~ peor.hasta ~ " vs. dic-2016", "neg" if peor.var_real_pct < 0 else "pos") }}
+    {{ kpi(k.inflacion_interanual.valor|pct(1), "Inflación interanual", k.inflacion_interanual.mes ~ " · " ~ k.inflacion_mensual.valor|pct(1) ~ " mensual") }}
+    {{ kpi(k.canastas_ripte.ultimo.cbt_por_ripte|numero(2), "Canastas que compra el salario promedio", k.canastas_ripte.ultimo.mes ~ " · eran " ~ k.canastas_ripte.inicio.cbt_por_ripte|numero(2) ~ " en " ~ k.canastas_ripte.inicio.mes) }}
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="principal-titulo">
+  <div class="tarjeta">
+    <div class="tarjeta__cabecera">
+      <h2 id="principal-titulo">Salario real por sector</h2>
+      <p class="nota">Índice de salarios del INDEC deflactado por el IPC. 100 = poder de compra de diciembre de 2016. Datos hasta {{ k.salario_real_total.hasta }}.</p>
+    </div>
+    {{ grafico("g-salario-real", "salario_real", "Líneas del salario real por sector entre diciembre de 2016 y " ~ k.salario_real_total.hasta ~ ". " ~ t.detalle) }}
+    {{ tabla(d.consultas["01_respuesta_principal"], "Ver la tabla del gráfico") }}
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="hallazgos-titulo">
+  <h2 id="hallazgos-titulo">Seis hallazgos</h2>
+  <div class="grilla-hallazgos">
+    {% for h in t.hallazgos %}
+    <article class="hallazgo">
+      <p class="hallazgo__num" aria-hidden="true">{{ "%02d"|format(loop.index) }}</p>
+      <h3>{{ h.titulo }}</h3>
+      <p>{{ h.texto }}</p>
+      <a href="{{ base }}{{ h.enlace }}">Ver en el dashboard<span class="sr"> ({{ h.titulo }})</span> →</a>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="como-titulo">
+  <h2 id="como-titulo">Cómo está hecho</h2>
+  <p class="bajada">Un solo comando corre todo offline en menos de un minuto: descarga verificada, QA de datos, base SQLite, consultas SQL, Excel, Power BI y este sitio.</p>
+  <ol class="pasos">
+    <li><span class="paso__etiqueta">1 · Extracción</span><strong>{{ d.qa.resultados[0].filas|length }} archivos oficiales</strong> con su sha256 verificado contra un manifiesto.</li>
+    <li><span class="paso__etiqueta">2 · QA de datos</span><strong>{{ d.qa.resultados|length }} chequeos automáticos</strong> que detectaron y documentaron {{ d.qa.conteo.alerta }} anomalías reales.</li>
+    <li><span class="paso__etiqueta">3 · SQL</span><strong>Modelo estrella en SQLite</strong> con vistas (CTEs y window functions) y {{ d.consultas|length }} consultas de negocio.</li>
+    <li><span class="paso__etiqueta">4 · Entrega</span><strong>Dashboard, calculadora, Excel y Power BI</strong> generados desde la misma base.</li>
+  </ol>
+  <div class="acciones">
+    <a class="boton" href="{{ base }}sql/">Ver el SQL</a>
+    <a class="boton" href="{{ base }}metodologia/">Ver la QA de datos</a>
+    <a class="boton" href="{{ repo }}">Código en GitHub</a>
+  </div>
+</section>
+
+<section class="contenedor seccion">
+  <div class="autor-mini">
+    <div class="avatar" aria-hidden="true">JB</div>
+    <div>
+      <h2>Hecho por Juan Barros</h2>
+      <p>Busco mi primer puesto como <strong>Analista de Datos Trainee/Junior</strong>. Estudio en UADE y vengo de soporte técnico y ventas. Este proyecto muestra cómo trabajo: preguntas de negocio, datos verificados y resultados que se pueden usar.</p>
+      <a class="boton boton--primario" href="{{ base }}sobre-mi/">Conocé mi perfil</a>
+    </div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="datos-graficos">{{ graficos_json }}</script>
+{% endblock %}

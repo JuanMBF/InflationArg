@@ -17,6 +17,7 @@ import pandas as pd
 
 from . import config
 from .extract import Archivo
+from .formato import mes, numero
 
 NIVELES = ("ok", "info", "alerta", "error")
 ICONOS = {"ok": "✅", "info": "ℹ️", "alerta": "⚠️", "error": "❌"}
@@ -86,7 +87,7 @@ class Reporte:
         lineas = [
             "# Reporte de QA de datos",
             "",
-            f"Datos descargados el {self.fecha_descarga}; ventana de análisis hasta {self.fecha_corte[:7]}.",
+            f"Datos descargados el {self.fecha_descarga}; ventana de análisis hasta {mes(self.fecha_corte)}.",
             "",
             f"**{c['ok']}** ok · **{c['info']}** informativos · **{c['alerta']}** alertas · **{c['error']}** errores",
             "",
@@ -109,7 +110,8 @@ class Reporte:
 
 def _celda(valor) -> str:
     if isinstance(valor, float):
-        return f"{valor:,.4f}".rstrip("0").rstrip(".")
+        texto = numero(valor, 4)
+        return texto.rstrip("0").rstrip(",") if "," in texto else texto
     return str(valor)
 
 
@@ -190,7 +192,7 @@ def chequear_completitud(stg: pd.DataFrame) -> Resultado:
         if datos.empty:
             problema = "sin datos"
         elif desde > config.INICIO_ANALISIS:
-            problema = f"empieza en {desde[:7]}, después del inicio del análisis"
+            problema = f"empieza en {mes(desde)}, después del inicio del análisis"
         if problema:
             filas.append({"serie_id": serie.serie_id, "problema": problema})
     if not filas:
@@ -198,7 +200,7 @@ def chequear_completitud(stg: pd.DataFrame) -> Resultado:
             "completitud",
             "Completitud del catálogo",
             "ok",
-            f"Las {len(config.CATALOGO)} series del catálogo tienen datos desde {config.INICIO_ANALISIS[:7]} o antes.",
+            f"Las {len(config.CATALOGO)} series del catálogo tienen datos desde {mes(config.INICIO_ANALISIS)} o antes.",
         )
     return Resultado("completitud", "Completitud del catálogo", "error", f"{len(filas)} series incompletas.", filas)
 
@@ -211,7 +213,7 @@ def chequear_base_100(stg: pd.DataFrame) -> Resultado:
         fila = stg[(stg["serie_id"] == serie.serie_id) & (stg["fecha"] == serie.base)]
         valor = float(fila["valor"].iloc[0]) if not fila.empty else None
         if valor is None or abs(valor - 100) > 1e-6:
-            filas.append({"serie_id": serie.serie_id, "base": serie.base[:7], "valor": valor})
+            filas.append({"serie_id": serie.serie_id, "base": mes(serie.base), "valor": valor})
     total = sum(1 for s in config.CATALOGO if s.base)
     if not filas:
         return Resultado(
@@ -236,7 +238,7 @@ def chequear_rangos(stg: pd.DataFrame) -> Resultado:
             filas.append(
                 {
                     "serie_id": serie_id,
-                    "fecha": f["fecha"][:7],
+                    "fecha": mes(f["fecha"]),
                     "var_mensual_%": round(float(var.loc[f.name]) * 100, 1),
                     "rango_%": f"{bajo * 100:.0f} a {alto * 100:.0f}",
                 }
@@ -268,14 +270,14 @@ def chequear_futuro(stg: pd.DataFrame, fecha_corte: str) -> Resultado:
         .agg(meses=("fecha", "size"), desde=("fecha", "min"), hasta=("fecha", "max"))
         .reset_index()
     )
-    filas["desde"] = filas["desde"].str.slice(0, 7)
-    filas["hasta"] = filas["hasta"].str.slice(0, 7)
+    filas["desde"] = filas["desde"].map(mes)
+    filas["hasta"] = filas["hasta"].map(mes)
     nombres = ", ".join(filas["serie_id"])
     return Resultado(
         "futuro",
         "Valores con fecha futura",
         "alerta",
-        f"{nombres}: {len(futuro)} valores posteriores a {fecha_corte[:7]} (ya fijados por resolución). "
+        f"{nombres}: {len(futuro)} valores posteriores a {mes(fecha_corte)} (ya fijados por resolución). "
         "Se excluyen del análisis.",
         filas.to_dict("records"),
     )
@@ -302,7 +304,7 @@ def detectar_repetidos(stg: pd.DataFrame, ventana: int = 3) -> pd.DataFrame:
                         {
                             "fecha": datos.loc[i, "fecha"],
                             "serie_id": serie_id,
-                            "motivo": f"repite exacto el valor de {datos.loc[i - atras, 'fecha'][:7]}",
+                            "motivo": f"repite exacto el valor de {mes(datos.loc[i - atras, 'fecha'])}",
                             "valor": valores[i],
                         }
                     )
@@ -319,7 +321,7 @@ def chequear_repetidos(marcas: pd.DataFrame) -> Resultado:
             "Ninguna serie en pesos repite un valor anterior al centavo.",
         )
     filas = [
-        {"serie_id": m.serie_id, "fecha": m.fecha[:7], "valor": m.valor, "motivo": m.motivo}
+        {"serie_id": m.serie_id, "fecha": mes(m.fecha), "valor": m.valor, "motivo": m.motivo}
         for m in marcas.itertuples()
     ]
     detalle = "; ".join(f"{f['serie_id']} {f['fecha']} {f['motivo']}" for f in filas)
@@ -367,7 +369,7 @@ def chequear_api(stg: pd.DataFrame, api: pd.DataFrame, fecha_corte: str) -> Resu
                 {
                     "serie_id": serie.serie_id,
                     "id_api": serie.id_api,
-                    "problema": f"valores distintos al CSV (peor: {peor[:7]}, "
+                    "problema": f"valores distintos al CSV (peor: {mes(peor)}, "
                     f"API {datos_api[peor]:,.2f} vs. CSV {csv[peor]:,.2f})",
                     "meses": len(distintos),
                 }
@@ -397,7 +399,7 @@ def chequear_frescura(stg: pd.DataFrame, fecha_corte: str) -> Resultado:
         filas.append(
             {
                 "serie_id": serie.serie_id,
-                "ultimo_dato": hasta[:7],
+                "ultimo_dato": mes(hasta),
                 "rezago_meses": rezago,
                 "maximo_esperado": REZAGO_MAXIMO[serie.grupo],
             }
@@ -429,8 +431,8 @@ def chequear_alineacion(stg: pd.DataFrame, marcas: pd.DataFrame, fecha_corte: st
         ("Poder de compra en canastas", ["ingreso_pesos", "canasta"]),
         ("Salario en dólares", ["ingreso_pesos", "tipo_cambio"]),
     ]
-    filas = [{"conclusion": nombre, "vale_hasta": min(por_grupo[g] for g in gs)[:7]} for nombre, gs in conclusiones]
-    distintas = sorted({f["vale_hasta"] for f in filas})
+    filas = [{"conclusion": nombre, "vale_hasta": mes(min(por_grupo[g] for g in gs))} for nombre, gs in conclusiones]
+    distintas = [mes(f) for f in sorted(set(por_grupo))]
     return Resultado(
         "alineacion",
         "Alineación de series",

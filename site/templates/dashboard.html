@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% from "macros.html" import tabla, grafico %}
+{% block head %}
+  <script src="{{ echarts.url }}" integrity="{{ echarts.sri }}" crossorigin="anonymous" defer></script>
+  <script src="{{ base }}static/js/graficos.js" defer></script>
+{% endblock %}
+{% block contenido %}
+{% set c = d.consultas %}
+{% set k = d.kpis %}
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">Dashboard interactivo</p>
+    <h1>Salarios, precios y poder de compra</h1>
+    <p class="bajada">Siete vistas de los mismos datos. Pasá el dedo o el mouse por los gráficos para ver cada mes; cada gráfico tiene su tabla y sale de una consulta SQL.</p>
+    <nav class="chips" aria-label="Secciones del dashboard">
+      <a href="#salario-real">Salario real</a>
+      <a href="#inflacion">Inflación</a>
+      <a href="#categorias">Núcleo y regulados</a>
+      <a href="#rubros">Rubros</a>
+      <a href="#canastas">Canastas</a>
+      <a href="#regiones">Regiones</a>
+      <a href="#dolares">En dólares</a>
+    </nav>
+  </div>
+</section>
+
+<div class="contenedor tablero">
+  <section class="tarjeta" id="salario-real" aria-labelledby="t-salario-real">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-salario-real">1. Salario real por sector</h2>
+      <p class="lectura">{{ t.detalle }} El peor momento fue {{ k.salario_real_total.fecha_minimo }}.</p>
+      <p class="nota">100 = poder de compra de dic-2016. Índice de salarios (INDEC) ÷ IPC nacional. Hasta {{ k.salario_real_total.hasta }}.</p>
+    </div>
+    {{ grafico("g-salario-real", "salario_real", "Salario real por sector, dic-2016 = 100. " ~ t.detalle) }}
+    {{ tabla(c["02_ganadores_por_anio"], "Tabla: quién le ganó a la inflación cada año (var. real %)") }}
+  </section>
+
+  <section class="tarjeta" id="inflacion" aria-labelledby="t-inflacion">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-inflacion">2. Inflación mensual e interanual</h2>
+      <p class="lectura">El pico mensual fue {{ k.pico_mensual.inflacion_mensual_pct|pct(1) }} en {{ k.pico_mensual.mes }}; el interanual, {{ k.pico_interanual.inflacion_interanual_pct|pct(1) }} en {{ k.pico_interanual.mes }}. En {{ k.inflacion_mensual.mes }}: {{ k.inflacion_mensual.valor|pct(1) }} mensual.</p>
+      <div class="segmentado" role="group" aria-label="Medida de inflación">
+        <button type="button" data-control="inflacion" data-valor="mensual" aria-pressed="true">Mensual</button>
+        <button type="button" data-control="inflacion" data-valor="interanual" aria-pressed="false">Interanual</button>
+      </div>
+    </div>
+    {{ grafico("g-inflacion", "inflacion", "Inflación mensual del IPC nacional desde enero de 2017. Pico de " ~ k.pico_mensual.inflacion_mensual_pct|pct(1) ~ " en " ~ k.pico_mensual.mes ~ ".") }}
+    {{ tabla(c["03_inflacion_picos"], "Tabla: los 10 meses de mayor inflación") }}
+  </section>
+
+  <section class="tarjeta" id="categorias" aria-labelledby="t-categorias">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-categorias">3. Núcleo, regulados y estacionales</h2>
+      <p class="lectura">Inflación interanual por categoría. Cuando los regulados (tarifas, combustibles, prepagas) van por encima del núcleo, la suba viene de precios que fija o autoriza el Estado.</p>
+    </div>
+    {{ grafico("g-categorias", "categorias", "Inflación interanual del nivel general, núcleo, regulados y estacionales.") }}
+    {{ tabla(c["04_inflacion_anual_por_categoria"], "Tabla: inflación anual por categoría (dic. contra dic.)") }}
+  </section>
+
+  {% set rubros = c["05_rubros_ranking"].filas %}
+  <section class="tarjeta" id="rubros" aria-labelledby="t-rubros">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-rubros">4. Rubros del IPC</h2>
+      <p class="lectura">Desde dic-2016, {{ rubros[0].rubro|lower }} se multiplicó por {{ rubros[0].veces|numero(1) }} y {{ rubros[-1].rubro|lower }} por {{ rubros[-1].veces|numero(1) }}. En el último año encabeza {{ (rubros|sort(attribute="puesto_ultimo_anio")|first).rubro|lower }}.</p>
+      <div class="segmentado" role="group" aria-label="Período de los rubros">
+        <button type="button" data-control="rubros" data-valor="acumulado" aria-pressed="true">Desde dic-2016</button>
+        <button type="button" data-control="rubros" data-valor="anio" aria-pressed="false">Último año</button>
+      </div>
+    </div>
+    {{ grafico("g-rubros", "rubros", "Ranking de rubros del IPC por suba acumulada desde diciembre de 2016.", "alto") }}
+    {{ tabla(c["05_rubros_ranking"], "Tabla: ranking de rubros") }}
+  </section>
+
+  <section class="tarjeta" id="canastas" aria-labelledby="t-canastas">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-canastas">5. ¿Cuántas canastas compra cada ingreso?</h2>
+      <p class="lectura">Canastas Básicas Totales (CBT, adulto equivalente, GBA) que compra cada ingreso. Debajo de 1, ese ingreso no alcanza para que una persona adulta sola supere la línea de pobreza.</p>
+      <p class="nota">Hasta {{ t.vigencia["Poder de compra en canastas"]|mes }}.{% for m in d.qa.marcas %} El dato de {{ m.serie_id|upper }} de {{ m.fecha|mes }} quedó en cuarentena por la QA: {{ m.motivo }}.{% endfor %}</p>
+    </div>
+    {{ grafico("g-canastas", "poder_compra", "Canastas básicas totales que compran el RIPTE, el salario mínimo y la jubilación mínima.") }}
+    {{ tabla(c["06_poder_compra_canastas"], "Tabla: canastas por ingreso, diciembre de cada año") }}
+  </section>
+
+  <section class="tarjeta" id="regiones" aria-labelledby="t-regiones">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-regiones">6. Inflación por región</h2>
+      <p class="lectura">Inflación interanual del último mes por región del INDEC. La barra gris es el total país.</p>
+    </div>
+    {{ grafico("g-regiones", "regiones", "Inflación interanual por región en el último mes disponible.") }}
+    {{ tabla(c["07_regiones"], "Tabla: inflación acumulada e interanual por región") }}
+  </section>
+
+  <section class="tarjeta" id="dolares" aria-labelledby="t-dolares">
+    <div class="tarjeta__cabecera">
+      <h2 id="t-dolares">7. Ingresos en dólares oficiales</h2>
+      <p class="lectura">RIPTE, salario mínimo y jubilación mínima divididos por el tipo de cambio oficial de valuación del BCRA de cada mes.</p>
+    </div>
+    {{ grafico("g-dolares", "usd", "Ingresos en dólares al tipo de cambio oficial, por mes.") }}
+    {{ tabla(c["08_salario_en_dolares"], "Tabla: promedio anual en dólares") }}
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="datos-graficos">{{ graficos_json }}</script>
+<script type="application/json" id="datos-consultas">{{ consultas_json }}</script>
+{% endblock %}
