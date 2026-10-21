@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python:
+    name: Pipeline, tests y lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Ruff
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: pytest con cobertura
+        run: pytest --cov --cov-report=term-missing --cov-fail-under=90
+      - name: Pipeline completo offline
+        run: python -m inflationarg all
+
+  sitio:
+    name: Sitio (JS, HTML, accesibilidad)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: pip install -r requirements.txt
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: python -m inflationarg all
+      - name: Calculadora en JS (mismos casos que pytest)
+        run: npm test
+      - name: Validación HTML
+        run: npm run validar-html
+      - name: Playwright + axe en 375/768/1280, claro y oscuro
+        run: npm run qa-sitio -- --capturas
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: capturas
+          path: build/capturas
+          retention-days: 14
