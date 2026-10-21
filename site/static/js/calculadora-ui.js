@@ -7,8 +7,9 @@ const form = document.getElementById("form-calculadora");
 const cuerpo = document.getElementById("resultado-cuerpo");
 const error = document.getElementById("error");
 
+// Espacio no separable: "$ 1.000" y "12,3 %" no se cortan entre líneas.
 const pesos = (v) =>
-  "$ " + new Intl.NumberFormat("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+  "$\u00a0" + new Intl.NumberFormat("es-AR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
 const pct = (v, signo = false) =>
   (signo && v > 0 ? "+" : "") +
   new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(v).replace("-", "−") +
@@ -32,7 +33,7 @@ function mostrar(r, sueldo) {
     ${pesos(sueldo)} en ${mes(r.desde)}.</p>
     <div class="resultado__grilla">
       ${dato(pct(r.inflacion_pct), `Inflación entre ${mes(r.desde)} y ${mes(r.hasta)}`)}
-      ${dato(pesos(r.sueldo_equivalente - sueldo), "Aumento mensual necesario para no perder")}`;
+      ${dato(pesos(r.sueldo_equivalente - sueldo), "Aumento necesario sobre el sueldo mensual")}`;
   if (r.sector) {
     const s = r.sector;
     html += `
@@ -40,21 +41,28 @@ function mostrar(r, sueldo) {
       ${dato(pesos(s.sueldo_segun_sector), "Sueldo si hubiera seguido al sector")}`;
   }
   html += `</div>`;
+  if (r.aviso_sector) {
+    html += `<p class="nota">${escapar(r.aviso_sector)}</p>`;
+  }
   if (r.sector) {
     const s = r.sector;
     const gana = s.resultado_real_pct >= 0;
+    const empate = Math.abs(s.resultado_real_pct) < 0.05;
     html += `<p class="veredicto veredicto--${gana ? "gana" : "pierde"}">
       ${gana ? "▲" : "▼"} Entre ${mes(r.desde)} y ${mes(s.hasta)} los salarios del sector
-      ${escapar(s.nombre.toLowerCase())} ${gana ? "le ganaron" : "perdieron"} a la inflación por
-      ${pct(Math.abs(s.resultado_real_pct))} en términos reales.</p>`;
+      ${escapar(s.nombre.toLowerCase())} ${
+        empate
+          ? "empataron con la inflación."
+          : `${gana ? "le ganaron" : "le perdieron"} a la inflación por ${pct(Math.abs(s.resultado_real_pct))} en términos reales.`
+      }</p>`;
   }
   if (r.actual) {
     const a = r.actual;
     const gana = a.diferencia_pesos >= 0;
     html += gana
-      ? `<p class="veredicto veredicto--gana">▲ Con ${pesos(a.sueldo_actual)} hoy, se cobra ${pesos(a.diferencia_pesos)}
+      ? `<p class="veredicto veredicto--gana">▲ Con ${pesos(a.sueldo_actual)} en ${mes(r.hasta)}, se cobra ${pesos(a.diferencia_pesos)}
          más de lo necesario: ${pct(a.resultado_real_pct, true)} real.</p>`
-      : `<p class="veredicto veredicto--pierde">▼ Con ${pesos(a.sueldo_actual)} hoy, faltan ${pesos(-a.diferencia_pesos)}
+      : `<p class="veredicto veredicto--pierde">▼ Con ${pesos(a.sueldo_actual)} en ${mes(r.hasta)}, faltan ${pesos(-a.diferencia_pesos)}
          por mes: hay que ajustar ${pct(a.ajuste_para_empatar_pct)} para empatar con la inflación
          (pérdida real de ${pct(Math.abs(a.resultado_real_pct))}).</p>`;
   }
@@ -73,6 +81,8 @@ function marcarError(campo, mensaje) {
 form.addEventListener("submit", (evento) => {
   evento.preventDefault();
   error.hidden = true;
+  // Nunca mostrar un resultado viejo junto a un error nuevo.
+  cuerpo.innerHTML = '<p class="nota">Completá el sueldo y tocá <strong>Calcular</strong>.</p>';
   form.querySelectorAll("[aria-invalid]").forEach((c) => c.removeAttribute("aria-invalid"));
 
   const sueldo = leerMonto(form.sueldo.value);

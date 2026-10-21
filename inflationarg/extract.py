@@ -92,15 +92,26 @@ def bajar_todo(destino: Path, directorio_foto: Path = config.DIR_RAW) -> dict:
     nuevos = []
     for item in manifiesto["archivos"]:
         ruta = destino / item["archivo"]
+        nuevo = dict(item)
         if item["archivo"] == config.ARCHIVO_API:
+            # La API solo se usa para el cruce de la QA: si falla, se sigue con un archivo vacío
+            # (la QA lo reporta como alerta) en vez de abortar toda la actualización.
             ids = [s.id_api for s in config.CATALOGO if s.id_api]
-            bajar_api(ids).to_csv(ruta, index=False)
+            try:
+                api = bajar_api(ids)
+            except (OSError, pd.errors.EmptyDataError, pd.errors.ParserError) as error:
+                api = pd.DataFrame(columns=["indice_tiempo"])
+                nuevo["error"] = f"la API no respondió: {error}"
+            api.to_csv(ruta, index=False)
         else:
             ruta.write_bytes(_bajar(item["url"]))
-        nuevo = dict(item)
+        datos = pd.read_csv(ruta, dtype={"indice_tiempo": str})
+        fechas = datos["indice_tiempo"].dropna().str.slice(0, 10)
         nuevo["sha256"] = sha256(ruta)
         nuevo["bytes"] = ruta.stat().st_size
-        nuevo["filas"] = len(pd.read_csv(ruta))
+        nuevo["filas"] = len(datos)
+        if not fechas.empty:
+            nuevo["desde"], nuevo["hasta"] = fechas.min(), fechas.max()
         nuevos.append(nuevo)
     manifiesto_nuevo = dict(manifiesto, archivos=nuevos)
     manifiesto_nuevo["descargado"] = pd.Timestamp.today().strftime("%Y-%m-%d")

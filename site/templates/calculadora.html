@@ -64,7 +64,7 @@
     <h2>Cómo calcula</h2>
     <ul>
       <li><strong>Sueldo equivalente</strong> = sueldo × IPC del mes final ÷ IPC del mes inicial (IPC nacional del INDEC, base dic-2016).</li>
-      <li><strong>Aumento del sector</strong> = variación del índice de salarios del INDEC en el mismo período. Como los salarios se publican con más rezago, si no hay dato para el mes final se usa el último disponible ({{ d.kpis.salario_real_total.hasta }}) y se compara contra la inflación de ese mismo período.</li>
+      <li><strong>Aumento del sector</strong> = variación del índice de salarios del INDEC en el mismo período. Como los salarios se publican con más rezago, si no hay dato para el mes final se usa el último disponible del sector ({{ d.kpis.salario_real_total.hasta }}; {{ d.kpis.salario_real_no_registrado.hasta }} para el privado no registrado, que el INDEC publica con cinco meses de rezago) y se compara contra la inflación de ese mismo período.</li>
       <li><strong>Resultado real</strong> = (1 + aumento) ÷ (1 + inflación) − 1. Positivo: le ganó a la inflación.</li>
       <li>La lógica está escrita dos veces, en <a href="{{ repo }}/blob/main/inflationarg/calculadora.py">Python</a> y en <a href="{{ repo }}/blob/main/site/static/js/calculadora.js">JavaScript</a>, y las dos pasan <a href="{{ repo }}/blob/main/tests/casos_calculadora.json">los mismos casos de prueba</a>.</li>
     </ul>

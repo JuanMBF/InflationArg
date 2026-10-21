@@ -169,7 +169,7 @@ def test_sitemap_robots_descargas(sitio):
 
 def test_echarts_con_version_fija_y_sri(sitio):
     html = (sitio / "dashboard" / "index.html").read_text(encoding="utf-8")
-    assert "echarts@6.0.0/" in html
+    assert "echarts@6.1.0/" in html
     assert 'integrity="sha384-' in html
 
 

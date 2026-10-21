@@ -165,28 +165,39 @@ def chequear_unicidad(stg: pd.DataFrame) -> Resultado:
             "unicidad",
             "Unicidad de fecha + serie",
             "ok",
-            f"{numero(len(stg))} observaciones, ninguna repetida.",
+            f"{numero(len(stg))} observaciones descargadas (la historia completa de cada serie, "
+            "no solo la ventana de análisis), ninguna repetida.",
         )
     filas = dup.groupby("serie_id").size().reset_index(name="duplicados").to_dict("records")
     return Resultado("unicidad", "Unicidad de fecha + serie", "error", f"{len(dup)} filas duplicadas.", filas)
 
 
+def fechas_validas(stg: pd.DataFrame) -> pd.Series:
+    """Máscara de filas con fecha ISO de primer día de mes (las demás las reporta chequear_fechas)."""
+    return stg["fecha"].astype("string").str.fullmatch(r"\d{4}-\d{2}-01").fillna(False).astype(bool)
+
+
 def chequear_fechas(stg: pd.DataFrame) -> Resultado:
     filas = []
-    mal_formadas = stg[~stg["fecha"].str.fullmatch(r"\d{4}-\d{2}-01")]
-    for serie_id, grupo in stg.groupby("serie_id"):
-        meses = sorted(_mes(f) for f in grupo["fecha"] if len(f) == 10)
+    validas = fechas_validas(stg)
+    mal_formadas = stg[~validas]
+    for serie_id, grupo in mal_formadas.groupby("serie_id"):
+        ejemplo = grupo["fecha"].iloc[0]
+        filas.append({"serie_id": serie_id, "problema": f"{len(grupo)} fechas mal formadas (p. ej. {ejemplo!r})"})
+    for serie_id, grupo in stg[validas].groupby("serie_id"):
+        meses = sorted(_mes(f) for f in grupo["fecha"])
         faltan = (meses[-1] - meses[0] + 1) - len(set(meses))
         if faltan:
-            filas.append({"serie_id": serie_id, "meses_faltantes": faltan})
-    if mal_formadas.empty and not filas:
+            salteados = "1 mes salteado" if faltan == 1 else f"{faltan} meses salteados"
+            filas.append({"serie_id": serie_id, "problema": salteados})
+    if not filas:
         return Resultado(
             "fechas",
             "Fechas mensuales contiguas",
             "ok",
             "Todas las fechas son primero de mes y ninguna serie tiene meses salteados.",
         )
-    detalle = f"{len(mal_formadas)} fechas mal formadas; {len(filas)} series con huecos."
+    detalle = f"{len(mal_formadas)} fechas mal formadas; {len(filas)} series con problemas de fecha."
     return Resultado("fechas", "Fechas mensuales contiguas", "error", detalle, filas)
 
 
@@ -382,7 +393,7 @@ def chequear_api(stg: pd.DataFrame, api: pd.DataFrame, fecha_corte: str) -> Resu
                     "serie_id": serie.serie_id,
                     "id_api": serie.id_api,
                     "problema": f"valores distintos al CSV (peor: {mes(peor)}, "
-                    f"API {datos_api[peor]:,.2f} vs. CSV {csv[peor]:,.2f})",
+                    f"API {numero(datos_api[peor], 2)} vs. CSV {numero(csv[peor], 2)})",
                     "meses": len(distintos),
                 }
             )
@@ -408,6 +419,8 @@ def chequear_frescura(stg: pd.DataFrame, fecha_corte: str) -> Resultado:
     vigente = stg[stg["fecha"] <= fecha_corte]
     for serie in config.CATALOGO:
         hasta = vigente.loc[vigente["serie_id"] == serie.serie_id, "fecha"].max()
+        if pd.isna(hasta):
+            continue  # serie sin datos: ya la marca chequear_completitud como error
         rezago = corte - _mes(hasta)
         filas.append(
             {
@@ -430,28 +443,45 @@ def chequear_frescura(stg: pd.DataFrame, fecha_corte: str) -> Resultado:
     )
 
 
+# Qué series usa cada conclusión (por grupo, con exclusiones o una serie puntual).
+CONCLUSIONES = [
+    ("Salario real: total, registrados, privado y público", ["salario_indice", "ipc_region"], {"sal_no_registrado"}),
+    ("Salario real: privado no registrado", ["ipc_region"], set(), ["sal_no_registrado"]),
+    ("Inflación, rubros y regiones", ["ipc_region", "ipc_categoria", "ipc_rubro"], set()),
+    ("Poder de compra en canastas", ["ingreso_pesos", "canasta"], set()),
+    ("Salario en dólares", ["ingreso_pesos", "tipo_cambio"], set()),
+]
+
+
 def chequear_alineacion(stg: pd.DataFrame, marcas: pd.DataFrame, fecha_corte: str) -> Resultado:
+    """Hasta qué mes vale cada conclusión, con las series fechadas en el mes que miden."""
     vigente = stg[stg["fecha"] <= fecha_corte].merge(
         marcas[["fecha", "serie_id"]].assign(marca=True), on=["fecha", "serie_id"], how="left"
     )
     vigente = vigente[vigente["marca"].isna()]
-    grupos = {s.serie_id: s.grupo for s in config.CATALOGO}
-    ultimo = vigente.groupby("serie_id")["fecha"].max()
-    por_grupo = ultimo.groupby(ultimo.index.map(grupos)).min()
-    conclusiones = [
-        ("Salario real por sector", ["salario_indice", "ipc_region"]),
-        ("Inflación, rubros y regiones", ["ipc_region", "ipc_categoria", "ipc_rubro"]),
-        ("Poder de compra en canastas", ["ingreso_pesos", "canasta"]),
-        ("Salario en dólares", ["ingreso_pesos", "tipo_cambio"]),
-    ]
-    filas = [{"conclusion": nombre, "vale_hasta": mes(min(por_grupo[g] for g in gs))} for nombre, gs in conclusiones]
-    distintas = [mes(f) for f in sorted(set(por_grupo))]
+    ultimo = {}
+    for serie_id, fecha in vigente.groupby("serie_id")["fecha"].max().items():
+        desfase = config.POR_ID[serie_id].desfase_meses if serie_id in config.POR_ID else 0
+        ultimo[serie_id] = (pd.Period(fecha, freq="M") - desfase).strftime("%Y-%m-01")
+    filas = []
+    for nombre, grupos, sin, *extra in CONCLUSIONES:
+        ids = [s.serie_id for s in config.CATALOGO if s.grupo in grupos and s.serie_id not in sin]
+        ids += extra[0] if extra else []
+        fechas = [ultimo[i] for i in ids if i in ultimo]
+        filas.append({"conclusion": nombre, "vale_hasta": mes(min(fechas)) if len(fechas) == len(ids) else "sin datos"})
+    distintas = [mes(f) for f in sorted(set(ultimo.values()))]
+    rezagadas = [s for s in config.CATALOGO if s.desfase_meses]
+    nota = "".join(
+        f" El índice «{nombre_corto(s.serie_id)}» se publica con {s.desfase_meses} meses de rezago: "
+        "se fecha en el mes que mide, por eso termina antes."
+        for s in rezagadas
+    )
     return Resultado(
         "alineacion",
         "Alineación de series",
         "info",
         f"Las series terminan en meses distintos ({distintas[0]} a {distintas[-1]}): cada conclusión "
-        "se calcula hasta el último mes en que están todas sus series.",
+        f"se calcula hasta el último mes en que están todas sus series.{nota}",
         filas,
     )
 
@@ -464,11 +494,13 @@ def correr(
     online: bool = False,
 ) -> Reporte:
     fecha_corte = fecha_descarga[:7] + "-01"
+    # Las fechas mal formadas las reporta chequear_fechas; el resto de los chequeos usa las válidas.
+    completo, stg = stg, stg[fechas_validas(stg)]
     marcas = detectar_repetidos(stg[stg["fecha"] <= fecha_corte])
     resultados = [
         chequear_archivos(inventario, online),
         chequear_unicidad(stg),
-        chequear_fechas(stg),
+        chequear_fechas(completo),
         chequear_completitud(stg),
         chequear_base_100(stg),
         chequear_rangos(stg),

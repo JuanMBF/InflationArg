@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 from inflationarg import config, extract, qa, transform
 
@@ -47,7 +48,9 @@ def test_salario_minimo_a_futuro_se_excluye(corrida, con):
 
 def test_alineacion_dice_hasta_cuando_vale_cada_conclusion(corrida):
     filas = {f["conclusion"]: f["vale_hasta"] for f in _por_id(corrida.reporte)["alineacion"].filas}
-    assert filas["Salario real por sector"] == "jul-2026"
+    assert filas["Salario real: total, registrados, privado y público"] == "jul-2026"
+    # El no registrado se publica con 5 meses de rezago: el dato de jul-2026 mide feb-2026.
+    assert filas["Salario real: privado no registrado"] == "feb-2026"
     assert filas["Inflación, rubros y regiones"] == "sep-2026"
     assert filas["Poder de compra en canastas"] == "jul-2026"
 
@@ -60,7 +63,7 @@ def test_duplicados_son_error():
 def test_mes_salteado_es_error():
     r = qa.chequear_fechas(_stg([("2020-01-01", "ripte", 1.0), ("2020-03-01", "ripte", 2.0)]))
     assert r.nivel == "error"
-    assert r.filas == [{"serie_id": "ripte", "meses_faltantes": 1}]
+    assert r.filas == [{"serie_id": "ripte", "problema": "1 mes salteado"}]
 
 
 def test_fecha_mal_formada_es_error():
@@ -123,3 +126,28 @@ def test_reporte_markdown_y_json(corrida):
     assert "⚠️" in md and "✅" in md
     assert "1.915.878,76" in md  # números en formato es-AR
     assert '"conteo"' in corrida.reporte.a_json()
+
+
+def _correr(stg):
+    inventario = extract.inventario(config.DIR_RAW, extract.leer_manifiesto())
+    api = transform.api_a_largo(extract.leer_crudos()[config.ARCHIVO_API])
+    return qa.correr(stg, api, inventario, "2026-10-21")
+
+
+@pytest.mark.parametrize("fecha", ["2020-01", "01/01/2020", None])
+def test_fechas_mal_formadas_dan_reporte_con_error(fecha):
+    stg = transform.a_largo(extract.leer_crudos())
+    stg.loc[stg.index[0], "fecha"] = fecha
+    reporte = _correr(stg)  # no tiene que levantar una excepción
+    fechas = next(r for r in reporte.resultados if r.chequeo == "fechas")
+    assert fechas.nivel == "error"
+    assert "mal formadas" in fechas.filas[0]["problema"]
+    assert reporte.tiene_errores
+
+
+def test_serie_vacia_da_reporte_con_error():
+    stg = transform.a_largo(extract.leer_crudos())
+    reporte = _correr(stg[stg["serie_id"] != "tc_oficial"])  # única serie de su grupo
+    assert reporte.tiene_errores
+    alineacion = next(r for r in reporte.resultados if r.chequeo == "alineacion")
+    assert {"conclusion": "Salario en dólares", "vale_hasta": "sin datos"} in alineacion.filas

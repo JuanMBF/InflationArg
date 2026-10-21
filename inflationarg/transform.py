@@ -51,6 +51,7 @@ def catalogo_df() -> pd.DataFrame:
                 "fuente": s.fuente,
                 "archivo": s.archivo,
                 "columna": s.columna,
+                "desfase_meses": s.desfase_meses,
             }
             for s in config.CATALOGO
         ]
