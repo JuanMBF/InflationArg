@@ -24,6 +24,8 @@
 
 ![Salario real por sector](docs/capturas/salario-real.png)
 
+En el dashboard se puede **cambiar el mes base** ("Comparar contra"): la conclusión depende de desde dónde se mire, y el gráfico y el texto se recalculan para cualquier diciembre desde 2016.
+
 ### Hallazgos
 
 1. **El piso fue en 2024 y la recuperación es parcial.** El salario real total tocó 62,1 en marzo de 2024; desde ahí recuperó 26,0 %, pero sigue 25,2 % debajo de su máximo (ago-2017).
@@ -73,7 +75,7 @@ flowchart LR
 | Modelo | `dim_fecha` (CTE recursiva), `dim_serie`, `fact_valor` con `estado` de QA. | [`sql/01_esquema.sql`](sql/01_esquema.sql), [`sql/02_modelo.sql`](sql/02_modelo.sql) |
 | Vistas | Variaciones con `LAG()` protegido contra meses faltantes, salario real, `RANK()` de picos, caída desde el máximo con `MAX() OVER`, pivotes de poder de compra y dólares, cobertura. | [`sql/03_vistas.sql`](sql/03_vistas.sql) |
 | Consultas | Una por pregunta de negocio, con un comentario que dice qué responde y cómo se lee. | [`sql/consultas/`](sql/consultas) |
-| Entrega | JSON para el sitio, Excel con tablas y gráfico nativo, CSV del modelo para Power BI, sitio estático. | [`export.py`](inflationarg/export.py), [`site.py`](inflationarg/site.py) |
+| Entrega | JSON para el sitio, Excel con índice navegable, tablas con formato y gráfico nativo, CSV del modelo para Power BI, sitio estático. | [`export.py`](inflationarg/export.py), [`site.py`](inflationarg/site.py) |
 
 <p align="center"><img src="docs/capturas/sql.png" alt="Página de SQL: la consulta de la respuesta principal con su código y su resultado" width="760"></p>
 

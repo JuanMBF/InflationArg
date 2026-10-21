@@ -29,11 +29,12 @@ def construir(
     marcas: pd.DataFrame,
     fecha_corte: str,
     fecha_descarga: str,
+    inicio_fact: str = INICIO_FACT,
 ) -> None:
     """Crea el esquema, carga staging y dimensiones y arma hechos y vistas."""
     con.executescript(_script(SCRIPTS[0]))
     parametros = {
-        "inicio_fact": INICIO_FACT,
+        "inicio_fact": inicio_fact,
         "base_analisis": config.INICIO_ANALISIS,
         "fecha_corte": fecha_corte,
         "fecha_descarga": fecha_descarga,

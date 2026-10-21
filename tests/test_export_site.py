@@ -75,7 +75,12 @@ def test_excel_una_hoja_por_pregunta_y_grafico(corrida):
     hoja = wb["Salario real mensual"]
     assert len(hoja._charts) == 1
     assert hoja.tables  # tabla con formato
-    assert wb["1 Respuesta"]["A4"].value == "serie_id"
+    hoja = wb["1 Respuesta"]
+    assert hoja["A5"].value == "Serie"  # encabezados legibles, sin columnas técnicas
+    assert hoja["A2"].value.startswith("¿Le ganaron los salarios")
+    assert hoja.page_setup.orientation == "landscape"
+    leeme = wb["Leeme"]
+    assert leeme["A5"].hyperlink.location == "'1 Respuesta'!A1"
 
 
 def test_power_bi_modelo_estrella(corrida):
