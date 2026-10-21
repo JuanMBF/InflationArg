@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "macros.html" import tabla %}
+{% block contenido %}
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">SQL · SQLite</p>
+    <h1>Modelo de datos y consultas</h1>
+    <p class="bajada">Los CSV oficiales se cargan en una base SQLite con un modelo estrella. Encima hay vistas con CTEs y window functions, y una consulta por cada pregunta de negocio. Todo lo que muestra el sitio sale de estas consultas.</p>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="modelo-titulo">
+  <h2 id="modelo-titulo">Modelo estrella</h2>
+  <div class="modelo" role="img" aria-label="Diagrama del modelo: fact_valor en el centro, relacionada con dim_fecha por fecha y con dim_serie por serie_id.">
+    <div class="entidad">
+      <p class="entidad__nombre">dim_fecha</p>
+      <ul><li class="pk">fecha</li><li>anio</li><li>mes</li><li>trimestre</li><li>mes_idx</li><li>etiqueta</li></ul>
+    </div>
+    <div class="relacion" aria-hidden="true">1 — N</div>
+    <div class="entidad entidad--hecho">
+      <p class="entidad__nombre">fact_valor</p>
+      <ul><li class="pk fk">fecha</li><li class="pk fk">serie_id</li><li>valor</li><li>estado</li></ul>
+    </div>
+    <div class="relacion" aria-hidden="true">N — 1</div>
+    <div class="entidad">
+      <p class="entidad__nombre">dim_serie</p>
+      <ul><li class="pk">serie_id</li><li>nombre</li><li>grupo</li><li>region</li><li>unidad</li><li>base</li><li>fuente</li></ul>
+    </div>
+  </div>
+  <p class="nota">{{ d.meta.observaciones|numero }} filas en <code>fact_valor</code> ({{ d.meta.series }} series × meses, formato largo). <code>estado = 'sospechoso'</code> marca lo que la QA puso en cuarentena: se guarda pero las vistas no lo usan.</p>
+
+  <div class="grilla-vistas">
+    <div class="vista"><code>v_variacion</code><p>Variación mensual, interanual y acumulada en el año de cualquier serie, con <code>LAG()</code> y control de meses faltantes.</p></div>
+    <div class="vista"><code>v_inflacion</code><p>IPC por región, categoría y rubro con <code>RANK()</code> de picos mensuales e interanuales.</p></div>
+    <div class="vista"><code>v_salario_real</code><p>Salarios deflactados por IPC (dic-2016 = 100) y caída desde el máximo con <code>MAX() OVER</code> acumulado.</p></div>
+    <div class="vista"><code>v_poder_compra</code><p>Pivote de ingresos y canastas: cuántas CBT compra cada ingreso.</p></div>
+    <div class="vista"><code>v_salario_usd</code><p>Ingresos divididos por el tipo de cambio oficial de cada mes.</p></div>
+    <div class="vista"><code>v_cobertura</code><p>Desde y hasta cuándo hay datos válidos de cada serie, y su rezago.</p></div>
+  </div>
+  <p><a href="{{ repo }}/tree/main/sql">Ver los scripts completos en GitHub</a> · <a href="{{ base }}descargas/inflationarg.db" download>Descargar la base SQLite</a></p>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="consultas-titulo">
+  <h2 id="consultas-titulo">Una consulta por pregunta</h2>
+  {% for nombre, q in d.consultas.items() %}
+  <article class="tarjeta consulta" id="consulta-{{ nombre }}">
+    <h3><span class="consulta__num">{{ nombre[:2] }}</span> {{ q.descripcion.split("Lectura:")[0].removeprefix("Pregunta: ") }}</h3>
+    {% if "Lectura:" in q.descripcion %}<p class="nota"><strong>Cómo se lee:</strong> {{ q.descripcion.split("Lectura:")[1] }}</p>{% endif %}
+    <details class="codigo-detalle">
+      <summary>Ver el SQL <span class="nota">(sql/consultas/{{ nombre }}.sql)</span></summary>
+      <pre class="codigo" tabindex="0"><code>{{ q.sql|sql }}</code></pre>
+    </details>
+    {{ tabla(q, "Resultado (" ~ q.filas|length ~ " filas)", loop.index <= 1) }}
+  </article>
+  {% endfor %}
+</section>
+{% endblock %}

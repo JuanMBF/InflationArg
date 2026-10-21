@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block contenido %}
+{% set qa = d.qa %}
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">Metodología · QA de datos</p>
+    <h1>De dónde salen los números y cómo se controlan</h1>
+    <p class="bajada">Datos oficiales descargados el {{ d.meta.fecha_descarga[8:10] }}/{{ d.meta.fecha_descarga[5:7] }}/{{ d.meta.fecha_descarga[:4] }} y verificados con {{ qa.resultados|length }} chequeos automáticos antes de entrar a la base.</p>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="qa-titulo">
+  <h2 id="qa-titulo">QA de datos</h2>
+  <div class="qa-resumen">
+    <p><span class="estado estado--ok">✓ {{ qa.conteo.ok }} ok</span> <span class="estado estado--info">i {{ qa.conteo.info }} informativo</span> <span class="estado estado--alerta">! {{ qa.conteo.alerta }} alertas</span> <span class="estado estado--error">✕ {{ qa.conteo.error }} errores</span></p>
+    <p class="nota">Un <strong>error</strong> frena el pipeline. Una <strong>alerta</strong> es una anomalía real de los datos: se documenta y, si corresponde, el dato se aparta del análisis.</p>
+  </div>
+  <ul class="qa-lista">
+    {% for r in qa.resultados %}
+    <li class="qa-item qa-item--{{ r.nivel }}">
+      <span class="estado estado--{{ r.nivel }}">{{ {"ok": "✓ ok", "info": "i info", "alerta": "! alerta", "error": "✕ error"}[r.nivel] }}</span>
+      <div>
+        <h3>{{ r.titulo }}</h3>
+        <p>{{ r.detalle }}</p>
+        {% if r.filas and r.nivel in ("alerta", "info", "error") %}
+        <details class="tabla-detalle">
+          <summary>Ver el detalle ({{ r.filas|length }} filas)</summary>
+          <section class="tabla-scroll" tabindex="0" aria-label="Detalle: {{ r.titulo }}">
+            <table>
+              <thead><tr>{% for c in r.filas[0] %}<th scope="col">{{ c|replace("_", " ")|capitalize }}</th>{% endfor %}</tr></thead>
+              <tbody>
+              {% for f in r.filas %}<tr>{% for c, v in f.items() %}<td class="{{ v|clase_celda(c) }}">{{ v|celda(c) }}</td>{% endfor %}</tr>{% endfor %}
+              </tbody>
+            </table>
+          </section>
+        </details>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="metodo-titulo">
+  <div class="tarjeta texto">
+    <h2 id="metodo-titulo">Método</h2>
+    <ul>
+      <li><strong>Salario real</strong> = índice de salarios del sector ÷ IPC nacional, llevados los dos a dic-2016 = 100 (el IPC del INDEC arranca en esa base; el índice de salarios es base oct-2016).</li>
+      <li><strong>Inflación</strong>: variación del IPC mensual (contra el mes anterior), interanual (contra el mismo mes del año anterior) y acumulada en el año (contra diciembre).</li>
+      <li><strong>Poder de compra</strong>: ingreso en pesos ÷ Canasta Básica Total de un adulto equivalente (GBA, INDEC).</li>
+      <li><strong>Salario en dólares</strong>: ingreso en pesos ÷ tipo de cambio oficial de valuación del BCRA (promedio mensual). No usa cotizaciones paralelas.</li>
+      <li><strong>Alineación</strong>: las series terminan en meses distintos; cada conclusión llega hasta el último mes en que están todas sus series.</li>
+    </ul>
+    <table class="tabla-simple">
+      <caption>Hasta cuándo vale cada conclusión</caption>
+      <thead><tr><th scope="col">Análisis</th><th scope="col">Vale hasta</th></tr></thead>
+      <tbody>
+        {% for a, h in t.vigencia.items() %}<tr><td>{{ a }}</td><td>{{ h|mes }}</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="limites-titulo">
+  <div class="tarjeta texto">
+    <h2 id="limites-titulo">Límites que conviene saber</h2>
+    <ul>
+      <li>El índice del <strong>sector privado no registrado</strong> se publica con un rezago de cinco meses respecto del resto (lo aclara el INDEC en cada informe): sus movimientos recientes son menos comparables mes a mes.</li>
+      <li>El <strong>RIPTE</strong> es el promedio de trabajadores estables registrados; no representa a quienes trabajan en negro.</li>
+      <li>La <strong>Canasta Básica Total</strong> se valoriza para GBA; en otras regiones el costo es distinto.</li>
+      <li>Los datos son los publicados a la fecha de descarga; el INDEC y otras fuentes pueden revisarlos. Por eso hay un chequeo que compara la API contra los CSV.</li>
+    </ul>
+  </div>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="fuentes-titulo">
+  <h2 id="fuentes-titulo">Fuentes y cobertura</h2>
+  <section class="tabla-scroll" tabindex="0" aria-label="Fuentes y cobertura de cada serie">
+    <table>
+      <thead><tr><th scope="col">Serie</th><th scope="col">Fuente</th><th scope="col">Desde</th><th scope="col">Hasta</th><th scope="col" class="num">Meses</th></tr></thead>
+      <tbody>
+        {% for s in d.cobertura|sort(attribute="nombre") %}
+        <tr><td>{{ s.nombre }}</td><td>{{ s.fuente }}</td><td>{{ s.desde|mes }}</td><td>{{ s.hasta|mes }}</td><td class="num">{{ s.meses }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <p class="nota">Todas las series vienen de <a href="https://datos.gob.ar">datos.gob.ar</a> (licencia CC BY 4.0). El manifiesto con URL, sha256 y filas de cada archivo está en <a href="{{ repo }}/blob/main/data/raw/MANIFEST.json">data/raw/MANIFEST.json</a>.</p>
+</section>
+
+<section class="contenedor seccion" aria-labelledby="descargas-titulo">
+  <h2 id="descargas-titulo">Descargas</h2>
+  <ul class="descargas">
+    <li class="descarga"><a href="{{ base }}descargas/inflationarg.xlsx" download>Excel</a><span>Una hoja por pregunta, tablas con formato y gráfico nativo.</span></li>
+    <li class="descarga"><a href="{{ base }}descargas/powerbi.zip" download>Power BI</a><span>Modelo estrella en CSV listo para importar, con <a href="{{ repo }}/blob/main/docs/power-bi.md">guía paso a paso</a>.</span></li>
+    <li class="descarga"><a href="{{ base }}descargas/inflationarg.db" download>SQLite</a><span>La base completa con tablas y vistas.</span></li>
+    <li class="descarga"><a href="{{ base }}descargas/dashboard.json" download>JSON</a><span>Los datos que alimentan este sitio.</span></li>
+  </ul>
+</section>
+{% endblock %}

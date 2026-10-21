@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block contenido %}
+{% set ultimo = meses_calculadora[-1] %}
+<section class="cabecera-pagina">
+  <div class="contenedor">
+    <p class="antetitulo">Herramienta para RR.HH. y liquidación de sueldos</p>
+    <h1>Calculadora de ajuste salarial</h1>
+    <p class="bajada">¿Cuánto tiene que cobrar hoy alguien para no perder contra la inflación? Ingresá un sueldo y el mes en que se cobraba: la calculadora lo actualiza por IPC y lo compara contra lo que aumentaron los salarios del sector.</p>
+  </div>
+</section>
+
+<div class="contenedor calculadora">
+  <form class="tarjeta formulario" id="form-calculadora" novalidate>
+    <h2>Datos del sueldo</h2>
+    <div class="campo">
+      <label for="sueldo">Sueldo de referencia (en pesos)</label>
+      <input type="text" id="sueldo" name="sueldo" inputmode="decimal" autocomplete="off" required placeholder="Ej.: 850.000" aria-describedby="ayuda-sueldo">
+      <p class="ayuda" id="ayuda-sueldo">Bruto o neto, pero siempre el mismo concepto.</p>
+    </div>
+    <div class="campo">
+      <label for="desde">Mes en que se cobraba</label>
+      <select id="desde" name="desde" required>
+        {% for m in meses_calculadora|reverse %}
+        <option value="{{ m }}"{% if loop.index == 13 %} selected{% endif %}>{{ (m ~ "-01")|mes }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="hasta">Actualizar hasta</label>
+      <select id="hasta" name="hasta" required>
+        {% for m in meses_calculadora|reverse %}
+        <option value="{{ m }}"{% if loop.first %} selected{% endif %}>{{ (m ~ "-01")|mes }}{% if loop.first %} (último IPC){% endif %}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="sector">Comparar con los salarios del sector</label>
+      <select id="sector" name="sector">
+        {% for id, nombre in d.sectores.items() %}
+        <option value="{{ id }}"{% if id == "sal_privado" %} selected{% endif %}>{{ nombre }}</option>
+        {% endfor %}
+        <option value="">No comparar</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="actual">Sueldo actual <span class="opcional">(opcional)</span></label>
+      <input type="text" id="actual" name="actual" inputmode="decimal" autocomplete="off" placeholder="Ej.: 1.200.000" aria-describedby="ayuda-actual">
+      <p class="ayuda" id="ayuda-actual">Si lo completás, te dice cuánto se ganó o perdió contra la inflación.</p>
+    </div>
+    <p class="error" id="error" role="alert" hidden></p>
+    <button class="boton boton--primario" type="submit">Calcular</button>
+  </form>
+
+  <section class="tarjeta resultado" id="resultado" aria-live="polite" aria-labelledby="resultado-titulo">
+    <h2 id="resultado-titulo">Resultado</h2>
+    <div id="resultado-cuerpo">
+      <p class="nota">Completá el sueldo y tocá <strong>Calcular</strong>.</p>
+    </div>
+  </section>
+</div>
+
+<section class="contenedor seccion">
+  <div class="tarjeta texto">
+    <h2>Cómo calcula</h2>
+    <ul>
+      <li><strong>Sueldo equivalente</strong> = sueldo × IPC del mes final ÷ IPC del mes inicial (IPC nacional del INDEC, base dic-2016).</li>
+      <li><strong>Aumento del sector</strong> = variación del índice de salarios del INDEC en el mismo período. Como los salarios se publican con más rezago, si no hay dato para el mes final se usa el último disponible ({{ d.kpis.salario_real_total.hasta }}) y se compara contra la inflación de ese mismo período.</li>
+      <li><strong>Resultado real</strong> = (1 + aumento) ÷ (1 + inflación) − 1. Positivo: le ganó a la inflación.</li>
+      <li>La lógica está escrita dos veces, en <a href="{{ repo }}/blob/main/inflationarg/calculadora.py">Python</a> y en <a href="{{ repo }}/blob/main/site/static/js/calculadora.js">JavaScript</a>, y las dos pasan <a href="{{ repo }}/blob/main/tests/casos_calculadora.json">los mismos casos de prueba</a>.</li>
+    </ul>
+    <p class="nota">Es una referencia estadística: no reemplaza lo que fije cada convenio colectivo.</p>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+<script type="application/json" id="datos-indices">{{ indices_json }}</script>
+<script type="application/json" id="datos-sectores">{{ d.sectores|tojson }}</script>
+<script type="module" src="{{ base }}static/js/calculadora-ui.js"></script>
+{% endblock %}
