@@ -109,3 +109,11 @@ def test_vigencia(resultados):
         "Salario real por sector": "2026-07-01",
         "Inflación, rubros y regiones": "2026-09-01",
     }
+
+
+def test_pico_interanual_de_toda_la_serie(dashboard, raw):
+    ipc = raw("ipc_nivel_general_regiones.csv", "ipc_ng_nacional")
+    interanual = (ipc / ipc.shift(12) - 1).dropna() * 100
+    pico = dashboard["kpis"]["pico_interanual"]
+    assert pico["inflacion_interanual_pct"] == pytest.approx(interanual.max(), abs=0.006)
+    assert pico["mes"] == "abr-2024" and interanual.idxmax() == "2024-04"

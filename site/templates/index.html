@@ -24,7 +24,7 @@
   <div class="kpis">
     {{ kpi(k.salario_real_total.var_real_pct|pct(1, true), "Salario real promedio", "total de salarios, " ~ k.salario_real_total.hasta ~ " vs. dic-2016", "neg" if k.salario_real_total.var_real_pct < 0 else "pos") }}
     {% set peor = t.peor_sector %}
-    {{ kpi(peor.var_real_pct|pct(1, true), "Salario real del " ~ peor.sector, "el sector con peor resultado, " ~ peor.hasta ~ " vs. dic-2016", "neg" if peor.var_real_pct < 0 else "pos") }}
+    {{ kpi(peor.var_real_pct|pct(1, true), "Salario real: " ~ peor.sector, "el sector con peor resultado, " ~ peor.hasta ~ " vs. dic-2016", "neg" if peor.var_real_pct < 0 else "pos") }}
     {{ kpi(k.inflacion_interanual.valor|pct(1), "Inflación interanual", k.inflacion_interanual.mes ~ " · " ~ k.inflacion_mensual.valor|pct(1) ~ " mensual") }}
     {{ kpi(k.canastas_ripte.ultimo.cbt_por_ripte|numero(2), "Canastas que compra el salario promedio", k.canastas_ripte.ultimo.mes ~ " · eran " ~ k.canastas_ripte.inicio.cbt_por_ripte|numero(2) ~ " en " ~ k.canastas_ripte.inicio.mes) }}
   </div>
