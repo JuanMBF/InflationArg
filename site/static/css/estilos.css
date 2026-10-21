@@ -436,3 +436,11 @@ td.neg { color: var(--negativo); }
 }
 .codigo-detalle summary { flex-wrap: wrap; column-gap: 0.4rem; row-gap: 0; }
 .codigo-detalle summary .nota { overflow-wrap: anywhere; font-weight: 400; }
+
+.control-base { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0.5rem 0 0.25rem; }
+.control-base label { font-weight: 600; font-size: 0.95rem; }
+.control-base select {
+  font: inherit; font-size: 0.95rem; min-height: 40px; padding: 0.35rem 0.6rem; border-radius: 10px;
+  border: 1px solid var(--eje); background: var(--superficie); color: var(--texto);
+}
+.lectura--dinamica { font-weight: 600; color: var(--texto); min-height: 1.6em; }
